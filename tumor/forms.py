@@ -111,15 +111,7 @@ class BrainwebAuthenticationForm(AuthenticationForm):
         )
 
     def confirm_login_allowed(self, user):
-        # Django'ning default tekshiruvlari (is_active va h.k.)
         super().confirm_login_allowed(user)
-
-        # Faqat staff bo'lgan userlarga ruxsat
-        if not user.is_staff:
-            raise forms.ValidationError(
-                "Access is restricted to clinical staff. Please contact the system administrator.",
-                code="not_staff",
-            )
 
 
 class BrainwebUserCreationForm(UserCreationForm):

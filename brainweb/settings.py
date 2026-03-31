@@ -183,8 +183,11 @@ else:
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-LOGIN_REDIRECT_URL = "/studies/"
-LOGOUT_REDIRECT_URL = "/accounts/login/"
+LOGIN_REDIRECT_URL = "tumor:dashboard"
+LOGOUT_REDIRECT_URL = "tumor:dashboard"
+
+# Session ni DB siz cookie orqali saqlash (registratsiya talab qilmaydi)
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 
 
@@ -211,9 +214,6 @@ CSRF_TRUSTED_ORIGINS = [
 # Productionda HTTPS majburiy (Railway HTTPS ishlatadi)
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
-
-LOGIN_REDIRECT_URL = "tumor:dashboard"
-LOGOUT_REDIRECT_URL = "tumor:about"
 
 # settings.py (development)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

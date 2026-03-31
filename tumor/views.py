@@ -90,10 +90,7 @@ def _rel_or_fs_to_abs_url(request, path_or_rel):
 # Public pages
 # ----------------------------
 def home_redirect(request):
-    """Entry point: "/" -> about (anonymous) or dashboard (authenticated)."""
-    if request.user.is_authenticated:
-        return redirect("tumor:dashboard")
-    return redirect("tumor:about")
+    return redirect("tumor:dashboard")
 
 
 def health_check(request):
@@ -201,17 +198,12 @@ def subscribe(request):
 # ----------------------------
 # Studies: list / upload
 # ----------------------------
-@login_required
 def study_list(request):
-    user = request.user
-    if not user.has_perm("tumor.view_study"):
-        return HttpResponseForbidden("You do not have permission to view MRI studies.")
+    # Session-based study tracking (no login required)
+    session_study_ids = request.session.get("study_ids", [])
 
     form = StudyUploadForm(data=request.POST or None, files=request.FILES or None)
     if request.method == "POST":
-        if not user.has_perm("tumor.upload_study"):
-            return HttpResponseForbidden("You do not have permission to upload MRI studies.")
-
         from . import ai
         if form.is_valid():
             study = None
@@ -227,12 +219,18 @@ def study_list(request):
 
                 study = Study.objects.create(
                     patient=patient,
-                    created_by=user,
+                    created_by=request.user if request.user.is_authenticated else None,
                     modality=form.cleaned_data.get("modality", ""),
                     description=form.cleaned_data.get("description", ""),
                     uploaded_file=uploaded_file,
                     status="processing",
                 )
+
+                # Session orqali study ID ni saqlash
+                ids = request.session.get("study_ids", [])
+                if study.pk not in ids:
+                    ids.append(study.pk)
+                request.session["study_ids"] = ids
 
                 # Preprocess -> nifti
                 uploaded_abs = study.uploaded_file.path
@@ -299,7 +297,11 @@ def study_list(request):
         else:
             messages.error(request, "Upload form is invalid. Check required fields.")
 
-    studies_qs = Study.objects.filter(created_by=user).select_related("patient").order_by("-created_at")
+    session_study_ids = request.session.get("study_ids", [])
+    if request.user.is_authenticated:
+        studies_qs = Study.objects.filter(created_by=request.user).select_related("patient").order_by("-created_at")
+    else:
+        studies_qs = Study.objects.filter(pk__in=session_study_ids).select_related("patient").order_by("-created_at")
 
     # simple stats for UI chart
     stats_by_day = (
@@ -323,13 +325,13 @@ def study_list(request):
 # ----------------------------
 # Study detail / viewer
 # ----------------------------
-@login_required
-@permission_required("tumor.view_study", raise_exception=True)
 def study_detail(request, pk):
     study = get_object_or_404(Study.objects.select_related("patient"), pk=pk)
 
-    if study.created_by and study.created_by != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You are not allowed to view this study.")
+    session_study_ids = request.session.get("study_ids", [])
+    if study.created_by and study.created_by != request.user:
+        if not request.user.is_authenticated and study.pk not in session_study_ids:
+            return HttpResponseForbidden("You are not allowed to view this study.")
 
     ai_result = getattr(study, "ai_result", None)
 
@@ -381,13 +383,13 @@ def study_detail(request, pk):
 # ----------------------------
 # Advanced PDF report v2.0
 # ----------------------------
-@login_required
-@permission_required("tumor.view_study", raise_exception=True)
 def study_report_pdf(request, pk):
     study = get_object_or_404(Study.objects.select_related("patient"), pk=pk)
 
-    if study.created_by and study.created_by != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You are not allowed to export this study.")
+    session_study_ids = request.session.get("study_ids", [])
+    if study.created_by and study.created_by != request.user:
+        if not request.user.is_authenticated and study.pk not in session_study_ids:
+            return HttpResponseForbidden("You are not allowed to export this study.")
 
     ai_result = getattr(study, "ai_result", None)
 
@@ -552,10 +554,12 @@ def study_report_pdf(request, pk):
 # ----------------------------
 # Dashboard
 # ----------------------------
-@login_required
 def dashboard(request):
-    user = request.user
-    studies_qs = Study.objects.filter(created_by=user)
+    if request.user.is_authenticated:
+        studies_qs = Study.objects.filter(created_by=request.user)
+    else:
+        session_study_ids = request.session.get("study_ids", [])
+        studies_qs = Study.objects.filter(pk__in=session_study_ids)
 
     total_studies = studies_qs.count()
     completed_studies = studies_qs.filter(status="done").count()
@@ -580,7 +584,7 @@ def dashboard(request):
         match = next((x for x in daily_raw if x["day"] == d), None)
         daily_counts.append(match["count"] if match else 0)
 
-    ai_qs = AIResult.objects.filter(study__created_by=user)
+    ai_qs = AIResult.objects.filter(study__in=studies_qs)
     class_raw = (
         ai_qs.filter(predicted_class__isnull=False)
         .exclude(predicted_class="")
@@ -614,12 +618,12 @@ def dashboard(request):
 # ----------------------------
 # Study status API (AJAX)
 # ----------------------------
-@login_required
-@permission_required("tumor.view_study", raise_exception=True)
 def study_status_api(request, pk):
     study = get_object_or_404(Study.objects.select_related("patient"), pk=pk)
-    if study.created_by and study.created_by != request.user and not request.user.is_superuser:
-        return HttpResponseForbidden("You are not allowed to query this study status.")
+    session_study_ids = request.session.get("study_ids", [])
+    if study.created_by and study.created_by != request.user:
+        if not request.user.is_authenticated and study.pk not in session_study_ids:
+            return HttpResponseForbidden("You are not allowed to query this study status.")
     ai_result = getattr(study, "ai_result", None)
     data = {
         "status": study.status,
@@ -632,7 +636,6 @@ def study_status_api(request, pk):
 # ----------------------------
 # Chatbot API (agent) - run with timeout using ThreadPoolExecutor
 # ----------------------------
-@login_required
 def chat_api(request):
     """POST JSON: {'message': '...'} -> JSON {'reply': '...'}.
     Expects standard CSRF token from frontend (no csrf_exempt).
