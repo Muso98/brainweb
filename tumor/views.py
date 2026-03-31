@@ -195,119 +195,135 @@ def subscribe(request):
     return redirect("tumor:about")
 
 
+def _handle_study_upload(request, form):
+    """POST /studies/ — fayl yuklash va Groq AI tahlili. Hech qachon 500 bermaydi."""
+    study = None
+    try:
+        logger.info("[UPLOAD] POST boshlandi")
+
+        if not form.is_valid():
+            logger.warning("[UPLOAD] Form invalid: %s", form.errors)
+            messages.error(request, "Forma to'ldirilmagan. Kerakli maydonlarni tekshiring.")
+            return redirect("tumor:study_list")
+
+        from . import ai
+        from .models import Patient as PatientModel
+
+        # 1. Bemor yaratish
+        patient, _ = PatientModel.objects.get_or_create(
+            first_name=form.cleaned_data["first_name"],
+            last_name=form.cleaned_data.get("last_name") or "",
+            birth_date=form.cleaned_data.get("birth_date"),
+            identifier=form.cleaned_data.get("identifier") or "",
+        )
+        logger.info("[UPLOAD] Bemor: %s", patient)
+
+        # 2. Study yaratish
+        study = Study.objects.create(
+            patient=patient,
+            created_by=request.user if request.user.is_authenticated else None,
+            modality=form.cleaned_data.get("modality", "MRI"),
+            description=form.cleaned_data.get("description", ""),
+            uploaded_file=form.cleaned_data["uploaded_file"],
+            status="processing",
+        )
+        logger.info("[UPLOAD] Study #%s yaratildi", study.pk)
+
+        # Session ga qo'shish
+        try:
+            ids = request.session.get("study_ids", [])
+            if study.pk not in ids:
+                ids.append(study.pk)
+            request.session["study_ids"] = ids
+        except Exception as sess_err:
+            logger.warning("[UPLOAD] Session xatosi: %s", sess_err)
+
+        # 3. NIfTI ga o'girish
+        uploaded_abs = study.uploaded_file.path
+        logger.info("[UPLOAD] Fayl: %s", uploaded_abs)
+        preprocessed_nifti = ai.preprocess_to_nifti(uploaded_abs)
+        study.nifti_file.name = os.path.relpath(preprocessed_nifti, settings.MEDIA_ROOT)
+        study.save(update_fields=["nifti_file"])
+        logger.info("[UPLOAD] NIfTI: %s", preprocessed_nifti)
+
+        # 4. Groq AI tahlili
+        from .ai_groq import analyze_study, save_slices_png
+        modality = form.cleaned_data.get("modality", "MRI")
+        logger.info("[UPLOAD] Groq tahlili boshlanmoqda...")
+        groq_result = analyze_study(preprocessed_nifti, modality=modality)
+        logger.info("[UPLOAD] Groq natija: %s", str(groq_result)[:300])
+
+        # 5. Volume hisoblash
+        vol_mm3 = None
+        try:
+            v = groq_result.get("tumor_volume_estimate_cm3")
+            if v is not None:
+                vol_mm3 = float(v) * 1000
+        except Exception:
+            pass
+
+        conf = groq_result.get("confidence")
+        predicted_conf = float(conf) if conf is not None else None
+        predicted_class = str(groq_result.get("predicted_class") or "")
+
+        # 6. AIResult saqlash
+        ai_result = AIResult.objects.create(
+            study=study,
+            tumor_volume_mm3=vol_mm3,
+            tumor_max_diameter_mm=None,
+            predicted_class=predicted_class,
+            predicted_confidence=predicted_conf,
+            volumes_by_group={
+                "groq_analysis": {
+                    "tumor_detected": groq_result.get("tumor_detected"),
+                    "severity": groq_result.get("severity"),
+                    "location": groq_result.get("location"),
+                    "findings": groq_result.get("findings"),
+                    "recommendation": groq_result.get("recommendation"),
+                    "model": groq_result.get("groq_model"),
+                }
+            },
+        )
+        logger.info("[UPLOAD] AIResult #%s saqlandi", ai_result.pk)
+
+        # 7. Kesim rasmlari saqlash
+        try:
+            slices_path = save_slices_png(preprocessed_nifti, study.id)
+            if slices_path:
+                ai_result.bbox_png.name = os.path.relpath(slices_path, settings.MEDIA_ROOT)
+                ai_result.save(update_fields=["bbox_png"])
+        except Exception as png_err:
+            logger.warning("[UPLOAD] PNG saqlashda xato (kritik emas): %s", png_err)
+
+        study.status = "done"
+        study.save(update_fields=["status"])
+        logger.info("[UPLOAD] Muvaffaqiyat! Study #%s", study.pk)
+
+        messages.success(request, "MRI/CT tahlili muvaffaqiyatli bajarildi!")
+        return redirect("tumor:study_detail", pk=study.pk)
+
+    except Exception as e:
+        logger.exception("[UPLOAD] XATO: %s", e)
+        if study is not None:
+            try:
+                study.status = "error"
+                study.error_message = str(e)[:2000]
+                study.save(update_fields=["status", "error_message"])
+                messages.warning(request, f"Fayl yuklandi, lekin xato yuz berdi: {e}")
+                return redirect("tumor:study_detail", pk=study.pk)
+            except Exception as e2:
+                logger.error("[UPLOAD] study.save xatosi: %s", e2)
+        messages.error(request, f"Xato: {e}")
+        return redirect("tumor:study_list")
+
+
 # ----------------------------
 # Studies: list / upload
 # ----------------------------
 def study_list(request):
-    # Session-based study tracking (no login required)
-    session_study_ids = request.session.get("study_ids", [])
-
     form = StudyUploadForm(data=request.POST or None, files=request.FILES or None)
     if request.method == "POST":
-        from . import ai
-        if form.is_valid():
-            study = None
-            try:
-                patient, _ = Patient.objects.get_or_create(
-                    first_name=form.cleaned_data["first_name"],
-                    last_name=form.cleaned_data["last_name"],
-                    birth_date=form.cleaned_data.get("birth_date"),
-                    identifier=form.cleaned_data.get("identifier") or "",
-                )
-
-                uploaded_file = form.cleaned_data["uploaded_file"]
-
-                study = Study.objects.create(
-                    patient=patient,
-                    created_by=request.user if request.user.is_authenticated else None,
-                    modality=form.cleaned_data.get("modality", ""),
-                    description=form.cleaned_data.get("description", ""),
-                    uploaded_file=uploaded_file,
-                    status="processing",
-                )
-
-                # Preprocess -> nifti
-                uploaded_abs = study.uploaded_file.path
-                preprocessed_nifti = ai.preprocess_to_nifti(uploaded_abs)
-                study.nifti_file.name = os.path.relpath(preprocessed_nifti, settings.MEDIA_ROOT)
-                study.save(update_fields=["nifti_file"])
-
-                # Groq Vision AI tahlili
-                from .ai_groq import analyze_study, save_slices_png
-                groq_result = analyze_study(preprocessed_nifti, modality=form.cleaned_data.get("modality", "MRI"))
-                logger.info("Groq tahlili: %s", groq_result)
-
-                # Volume taxmini mm3 ga o'tkazish (Groq cm3 beradi)
-                vol_mm3 = None
-                if groq_result.get("tumor_volume_estimate_cm3") is not None:
-                    try:
-                        vol_mm3 = float(groq_result["tumor_volume_estimate_cm3"]) * 1000
-                    except Exception:
-                        pass
-
-                confidence = groq_result.get("confidence")
-                predicted_class = groq_result.get("predicted_class", "") or ""
-                predicted_conf = float(confidence) if confidence is not None else None
-
-                # AIResult saqlash
-                ai_result = AIResult.objects.create(
-                    study=study,
-                    tumor_volume_mm3=vol_mm3,
-                    tumor_max_diameter_mm=None,
-                    predicted_class=predicted_class,
-                    predicted_confidence=predicted_conf,
-                    volumes_by_group={
-                        "groq_analysis": {
-                            "tumor_detected": groq_result.get("tumor_detected"),
-                            "severity": groq_result.get("severity"),
-                            "location": groq_result.get("location"),
-                            "findings": groq_result.get("findings"),
-                            "recommendation": groq_result.get("recommendation"),
-                            "model": groq_result.get("groq_model"),
-                        }
-                    },
-                )
-
-                # Kesimlar PNG sifatida saqlash (preview uchun)
-                slices_path = save_slices_png(preprocessed_nifti, study.id)
-                if slices_path:
-                    rel = os.path.relpath(slices_path, settings.MEDIA_ROOT)
-                    ai_result.bbox_png.name = rel
-
-                ai_result.save()
-
-                study.status = "done"
-                study.save(update_fields=["status"])
-
-                messages.success(request, "MRI/CT tahlili muvaffaqiyatli bajarildi!")
-                return redirect("tumor:study_detail", pk=study.pk)
-
-            except Exception as e:
-                logger.exception("Study processing failed: %s", e)
-                if study is not None:
-                    try:
-                        study.status = "error"
-                        study.error_message = str(e)[:2000]
-                        study.save(update_fields=["status", "error_message"])
-                        # session ga qo'shish (muvaffaqiyatli saqlangan study uchun)
-                        try:
-                            ids = request.session.get("study_ids", [])
-                            if study.pk not in ids:
-                                ids.append(study.pk)
-                            request.session["study_ids"] = ids
-                        except Exception:
-                            pass
-                        messages.warning(
-                            request,
-                            f"Fayl yuklandi, lekin AI tahlili amalga oshmadi: {e}. "
-                            "Study saqlanib qoldi."
-                        )
-                        return redirect("tumor:study_detail", pk=study.pk)
-                    except Exception as save_err:
-                        logger.error("study.save() failed: %s", save_err)
-                messages.error(request, f"Xato yuz berdi: {e}")
-        else:
-            messages.error(request, "Upload form is invalid. Check required fields.")
+        return _handle_study_upload(request, form)
 
     session_study_ids = request.session.get("study_ids", [])
     if request.user.is_authenticated:
