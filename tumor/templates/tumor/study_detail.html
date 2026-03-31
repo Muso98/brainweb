@@ -1,0 +1,394 @@
+{# templates/tumor/study_detail.html #}
+{% extends "base.html" %}
+{% load static %}
+{% load text_filters %}   {# yangi qatorda #}
+
+
+{% block title %}Study #{{ study.id }} · BrainWeb{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <a href="{% url 'tumor:study_list' %}" class="btn btn-link ps-0">- Back to studies</a>
+    <h1 class="h4 mb-0 mt-2">Study #{{ study.id }} · {{ study.modality }}</h1>
+    <p class="text-muted mb-0">{{ study.created_at|date:"Y-m-d H:i" }}</p>
+  </div>
+
+  <div class="text-end">
+    {% if ai_result %}
+      <a href="{% url 'tumor:study_report_pdf' study.id %}" class="btn btn-outline-primary btn-sm mb-2">
+        Download PDF report
+      </a><br>
+    {% endif %}
+    <span id="studyStatusBadge" class="badge
+      {% if study.status == 'done' %}bg-success
+      {% elif study.status == 'processing' or study.status == 'pending' %}bg-primary
+      {% elif study.status == 'error' %}bg-danger
+      {% else %}bg-secondary
+      {% endif %}">
+      {{ study.status|title }}
+    </span>
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <div class="col-lg-4">
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Patient</h5>
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted">Name</dt>
+          <dd class="col-7">{{ study.patient.first_name }} {{ study.patient.last_name }}</dd>
+          <dt class="col-5 text-muted">Birth date</dt>
+          <dd class="col-7">
+            {% if study.patient.birth_date %}{{ study.patient.birth_date|date:"Y-m-d" }}{% else %}<span class="text-muted">-</span>{% endif %}
+          </dd>
+          <dt class="col-5 text-muted">ID</dt>
+          <dd class="col-7">{% if study.patient.identifier %}{{ study.patient.identifier }}{% else %}<span class="text-muted">-</span>{% endif %}</dd>
+        </dl>
+      </div>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body">
+        <h5 class="card-title mb-3">Study info</h5>
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted">Modality</dt><dd class="col-7">{{ study.modality }}</dd>
+          <dt class="col-5 text-muted">Uploaded</dt>
+          <dd class="col-7 text-truncate" title="{{ study.uploaded_file.name }}">{{ study.uploaded_file.name }}</dd>
+          {% if study.nifti_file %}
+            <dt class="col-5 text-muted">NIfTI</dt>
+            <dd class="col-7 text-truncate" title="{{ study.nifti_file.name }}">{{ study.nifti_file.name }}</dd>
+          {% endif %}
+        </dl>
+        {% if study.status == "error" and study.error_message %}
+          <div class="alert alert-danger mt-3 small mb-0"><strong>Error:</strong><br><code>{{ study.error_message }}</code></div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-8">
+
+    {# 1. 3D VIEWER CARD #}
+    {% if tumor_mesh_url %}
+      <div class="card mb-3">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <h5 class="card-title mb-0">3D Tumor Model</h5>
+            <span class="badge bg-light text-muted border small">WebGL · Interactive</span>
+          </div>
+
+          <div class="d-flex gap-3 align-items-center mb-2 small">
+            <div class="d-flex align-items-center gap-2">
+              <span class="text-muted">Opacity</span>
+              <input type="range" id="meshOpacityRange" min="0" max="1" step="0.01" value="0.9" style="width: 140px;">
+              <span id="meshOpacityLabel" class="text-muted">0.90</span>
+            </div>
+            <div class="form-check form-switch ms-2">
+              <input class="form-check-input" type="checkbox" id="showWireframe">
+              <label class="form-check-label small" for="showWireframe">Wireframe</label>
+            </div>
+          </div>
+
+          <div id="tumor3dContainer" class="border rounded position-relative bg-black" style="height:420px; min-height:320px; overflow:hidden;">
+            <div id="tumor3dFallback" class="position-absolute top-50 start-50 translate-middle text-muted small">Loading model...</div>
+          </div>
+
+          <div class="mt-2 text-end">
+             <a href="{{ tumor_mesh_url }}" target="_blank" class="small text-decoration-none">Download Mesh JSON</a>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+    {# 2. 2D SLICE VIEWER #}
+    <div class="card mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">AI Segmentation (2D)</h5>
+          {% if ai_result and ai_result.mask_nifti %}
+             <a href="{{ ai_result.mask_nifti.url }}" class="btn btn-outline-secondary btn-sm">Download Mask</a>
+          {% endif %}
+        </div>
+
+        {% if orig_slice_urls and overlay_slice_urls %}
+          <div class="mb-2 d-flex align-items-center">
+            <input type="range" class="form-range flex-grow-1 me-3" id="sliceRange" min="0" max="{{ overlay_slice_urls|length|add:'-1' }}" value="0">
+            <span class="small text-muted" style="min-width: 60px; text-align: right;" id="sliceIndexLabel">1 / {{ overlay_slice_urls|length }}</span>
+          </div>
+
+          <div class="row g-2">
+            <div class="col-md-6 text-center">
+              <img id="origSliceImg" src="{{ orig_slice_urls.0 }}" class="img-fluid rounded border bg-dark" style="max-height:280px;">
+              <div class="small text-muted mt-1">Original</div>
+            </div>
+            <div class="col-md-6 text-center">
+              <img id="overlaySliceImg" src="{{ overlay_slice_urls.0 }}" class="img-fluid rounded border bg-dark" style="max-height:280px;">
+              <div class="small text-muted mt-1">AI Overlay</div>
+            </div>
+          </div>
+
+          <script>
+            (function() {
+              const origSlices = {{ orig_slice_urls|safe }};
+              const overlaySlices = {{ overlay_slice_urls|safe }};
+              const rangeEl = document.getElementById('sliceRange');
+              const origImg = document.getElementById('origSliceImg');
+              const overlayImg = document.getElementById('overlaySliceImg');
+              const labelEl = document.getElementById('sliceIndexLabel');
+
+              if (rangeEl && origImg) {
+                rangeEl.addEventListener('input', function() {
+                  const idx = parseInt(this.value);
+                  if (origSlices[idx]) {
+                    origImg.src = origSlices[idx];
+                    overlayImg.src = overlaySlices[idx];
+                    labelEl.textContent = (idx + 1) + ' / ' + overlaySlices.length;
+                  }
+                });
+              }
+            })();
+          </script>
+
+        {% elif ai_result and ai_result.bbox_png %}
+          <div class="text-center">
+            <img src="{{ ai_result.bbox_png.url }}" class="img-fluid rounded border" style="max-height:420px;">
+          </div>
+        {% else %}
+          <p class="text-muted mb-0"><em>No AI result yet.</em></p>
+        {% endif %}
+      </div>
+    </div>
+
+    {# 3. ANALYSIS RESULTS #}
+    {% if ai_result %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">Analysis Metrics</h5>
+          <div class="row small">
+            <div class="col-6 mb-3">
+              <div class="text-muted">Tumor Volume</div>
+              {% if ai_result.tumor_volume_mm3 is not None %}
+                <div class="fw-bold fs-5">{{ ai_result.tumor_volume_mm3|floatformat:1 }} mm³</div>
+                <span class="text-muted">({{ volume_cm3|floatformat:2 }} cm³)</span>
+              {% else %}
+                <div class="fw-bold fs-5 text-muted">-</div>
+              {% endif %}
+            </div>
+
+            <div class="col-6 mb-3">
+              <div class="text-muted">Max Diameter</div>
+              {% if ai_result.tumor_max_diameter_mm is not None %}
+                <div class="fw-bold fs-5">{{ ai_result.tumor_max_diameter_mm|floatformat:1 }} mm</div>
+                {% if max_diam_cm %}
+                  <span class="text-muted">({{ max_diam_cm|floatformat:2 }} cm)</span>
+                {% endif %}
+              {% else %}
+                <div class="fw-bold fs-5 text-muted">-</div>
+              {% endif %}
+            </div>
+
+            {# Optional: show volumes by groups if view passed them as context #}
+            {% if volumes_by_group %}
+              <div class="col-12 border-top pt-2 mt-2">
+                <div class="text-muted mb-2">Volumes by label group</div>
+                <div class="small">
+                  <table class="table table-sm mb-0">
+                    <thead>
+                      <tr>
+                        <th>Group</th>
+                        <th class="text-end">Voxels</th>
+                        <th class="text-end">mm³</th>
+                        <th class="text-end">cm³</th>
+                        <th class="text-end">Approx. diam (mm)</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for name, info in volumes_by_group.items %}
+                        <tr>
+                          <td>{{ name|capfirst|replace:"_, " }}</td>
+                          <td class="text-end">{{ info.voxels }}</td>
+                          <td class="text-end">{{ info.volume_mm3|floatformat:1 }}</td>
+                          <td class="text-end">{{ info.volume_cm3|floatformat:2 }}</td>
+                          <td class="text-end">
+                            {% if info.approx_max_diameter_mm %}{{ info.approx_max_diameter_mm|floatformat:1 }}{% else %}-{% endif %}
+                          </td>
+                        </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            {% endif %}
+
+            <div class="col-12 border-top pt-2 mt-2">
+               <div class="text-muted mb-1">Classification</div>
+               {% if ai_result.predicted_class %}
+                 <span class="badge bg-info text-dark fs-6">{{ ai_result.predicted_class }}</span>
+                 <span class="text-muted ms-2">Conf: {{ ai_result.predicted_confidence|default_if_none:"-"|floatformat:2 }}</span>
+               {% else %}
+                 <span class="text-muted">-</span>
+               {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    {% endif %}
+
+  </div>
+</div>
+
+<script>
+  (function() {
+    const statusBadge = document.getElementById("studyStatusBadge");
+    if (!statusBadge) return;
+
+    // Agar status DONE yoki ERROR bo'lsa, polling shart emas
+    const text = statusBadge.textContent.trim().toLowerCase();
+    if (text === 'done' || text === 'error') return;
+
+    const interval = setInterval(() => {
+      fetch("{% url 'tumor:study_status_api' study.id %}", {headers:{"X-Requested-With":"XMLHttpRequest"}})
+        .then(r => r.json())
+        .then(data => {
+          if (data.status && data.status !== "{{ study.status }}") {
+             window.location.reload(); // Status o'zgarganda sahifani yangilash
+          }
+        }).catch(()=>{/*ignore*/});
+    }, 5000);
+  })();
+</script>
+
+{% if tumor_mesh_url %}
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+  const container = document.getElementById('tumor3dContainer');
+  const fallback = document.getElementById('tumor3dFallback');
+  const meshUrl = "{{ tumor_mesh_url|escapejs }}";
+
+  if (container && meshUrl) {
+    init3DViewer();
+  }
+
+  function init3DViewer() {
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 360;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x111116);
+
+    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
+    camera.position.set(0, 0, 100);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(width, height);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    container.appendChild(renderer.domElement);
+
+    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    dirLight.position.set(5, 10, 7);
+    scene.add(dirLight);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+
+    let meshObject = null;
+    let material = null;
+
+    fetch(meshUrl)
+      .then(res => res.json())
+      .then(json => {
+        if (!json.vertices) throw new Error("No vertices found");
+
+        // build geometry
+        const vertices = new Float32Array(json.vertices.flat());
+        const geometry = new THREE.BufferGeometry();
+        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
+
+        if (json.faces && json.faces.length > 0) {
+           const indices = json.vertices.length > 65535
+               ? new Uint32Array(json.faces.flat())
+               : new Uint16Array(json.faces.flat());
+           geometry.setIndex(new THREE.BufferAttribute(indices, 1));
+           geometry.computeVertexNormals();
+           geometry.computeBoundingSphere();
+           material = new THREE.MeshStandardMaterial({
+             color: 0xff4d4d,
+             roughness: 0.5,
+             metalness: 0.1,
+             transparent: true,
+             opacity: 0.9,
+             side: THREE.DoubleSide
+           });
+           meshObject = new THREE.Mesh(geometry, material);
+        } else {
+           geometry.computeBoundingSphere();
+           material = new THREE.PointsMaterial({ size: 0.5, color: 0xff4d4d });
+           meshObject = new THREE.Points(geometry, material);
+        }
+
+        if (geometry.boundingSphere) {
+           const c = geometry.boundingSphere.center;
+           const r = geometry.boundingSphere.radius;
+           geometry.translate(-c.x, -c.y, -c.z);
+           camera.position.set(0, 0, r * 2.5);
+           controls.target.set(0, 0, 0);
+        }
+
+        scene.add(meshObject);
+        if (fallback) fallback.style.display = 'none';
+        animate();
+      })
+      .catch(err => {
+        console.error("3D Error:", err);
+        if (fallback) {
+          fallback.textContent = "Error loading 3D model.";
+          fallback.className = "position-absolute top-50 start-50 translate-middle text-danger small";
+        }
+      });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    const opRange = document.getElementById('meshOpacityRange');
+    const opLabel = document.getElementById('meshOpacityLabel');
+    const wireCheck = document.getElementById('showWireframe');
+
+    if (opRange && opLabel) {
+      opRange.addEventListener('input', (e) => {
+         const val = parseFloat(e.target.value);
+         opLabel.textContent = val.toFixed(2);
+         if (material) material.opacity = val;
+      });
+    }
+
+    if (wireCheck) {
+      wireCheck.addEventListener('change', (e) => {
+         if (material && material.isMeshStandardMaterial) {
+            material.wireframe = e.target.checked;
+         }
+      });
+    }
+
+    window.addEventListener('resize', () => {
+       const w = container.clientWidth;
+       const h = container.clientHeight;
+       camera.aspect = w / h;
+       camera.updateProjectionMatrix();
+       renderer.setSize(w, h);
+    });
+  }
+</script>
+{% endif %}
+
+{% endblock %}

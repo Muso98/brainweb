@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Sign up · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+  <div class="row w-100 justify-content-center">
+    <div class="col-md-8 col-lg-7 col-xl-6">
+      <div class="card card-soft">
+        <div class="row g-0">
+          <!-- Chap blok: gradient / info -->
+          <div class="col-md-5 d-none d-md-flex align-items-stretch">
+            <div class="w-100 h-100 p-4 text-white"
+                 style="
+                   border-top-left-radius: 1rem;
+                   border-bottom-left-radius: 1rem;
+                   background: radial-gradient(circle at top left, #22c55e, #14532d);
+                 ">
+              <div class="d-flex flex-column h-100">
+                <div class="mb-3">
+                  <span class="badge bg-light text-dark badge-pill mb-2">
+                    New to BrainWeb?
+                  </span>
+                  <h2 class="h5 mb-1">Create your account</h2>
+                  <p class="small text-white-50 mb-0">
+                    Saqlangan studylar, AI natijalari, PDF reportlar va dashboard –
+                    hammasi bitta xavfsiz akkaunt ostida.
+                  </p>
+                </div>
+
+                <div class="mt-auto small text-white-50">
+                  <div class="mb-1">✓ Personal workspace</div>
+                  <div class="mb-1">✓ Role-based access (keyinchalik)</div>
+                  <div class="mb-1">✓ Audit log & history (keyinchalik)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- O'ng blok: forma -->
+          <div class="col-md-7">
+            <div class="p-4 p-md-5">
+              <div class="mb-4 text-center text-md-start">
+                <h1 class="h4 mb-1">Create account</h1>
+                <p class="text-muted small mb-0">
+                  Yangi foydalanuvchi sifatida ro‘yxatdan o‘ting.
+                </p>
+              </div>
+
+              {% if form.non_field_errors %}
+                <div class="alert alert-danger small">
+                  {% for error in form.non_field_errors %}
+                    <div>{{ error }}</div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+
+              <form method="post" novalidate>
+                {% csrf_token %}
+
+                <div class="mb-3">
+                  <label for="{{ form.username.id_for_label }}" class="form-label small">
+                    Username
+                  </label>
+                  {{ form.username }}
+                  {% if form.username.help_text %}
+                    <div class="form-text small">{{ form.username.help_text|safe }}</div>
+                  {% endif %}
+                  {% if form.username.errors %}
+                    <div class="invalid-feedback d-block small">
+                      {% for error in form.username.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label for="{{ form.password1.id_for_label }}" class="form-label small">
+                    Password
+                  </label>
+                  {{ form.password1 }}
+                  {% if form.password1.help_text %}
+                    <div class="form-text small">{{ form.password1.help_text|safe }}</div>
+                  {% endif %}
+                  {% if form.password1.errors %}
+                    <div class="invalid-feedback d-block small">
+                      {% for error in form.password1.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="mb-3">
+                  <label for="{{ form.password2.id_for_label }}" class="form-label small">
+                    Confirm password
+                  </label>
+                  {{ form.password2 }}
+                  {% if form.password2.help_text %}
+                    <div class="form-text small">{{ form.password2.help_text|safe }}</div>
+                  {% endif %}
+                  {% if form.password2.errors %}
+                    <div class="invalid-feedback d-block small">
+                      {% for error in form.password2.errors %}
+                        {{ error }}
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 mb-3">
+                  Create account
+                </button>
+              </form>
+
+              <p class="small text-center text-muted mb-0">
+                Allaqachon akkauntingiz bormi?
+                <a href="{% url 'tumor:login' %}">Log in</a>
+              </p>
+            </div>
+          </div>
+
+        </div> <!-- row -->
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

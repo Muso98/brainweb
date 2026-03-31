@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+
+{% block title %}About · BrainWeb{% endblock %}
+
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-xl-9 col-lg-10">
+
+    <!-- HERO PANEL -->
+    <div class="card border-0 shadow-sm mb-4"
+         style="background: radial-gradient(circle at 0% 0%, #6366f1 0, #1d4ed8 35%, #020617 100%); color: #fff;">
+      <div class="card-body p-4 p-md-5">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="rounded-circle bg-white bg-opacity-10 d-flex align-items-center justify-content-center"
+                 style="width: 52px; height: 52px; font-size: 1.7rem;">
+              🧠
+            </div>
+            <div>
+              <h1 class="h4 mb-1">BrainWeb clinical platform</h1>
+              <p class="mb-0 small" style="opacity: .85;">
+                Secure MRI/CT tumour analysis assistant for radiologists, neurosurgeons and research teams.
+              </p>
+            </div>
+          </div>
+
+          <div class="text-end">
+            <div class="small mb-1" style="opacity:.85;">Access status</div>
+            {% if request.user.is_authenticated %}
+              <span class="badge rounded-pill bg-success-subtle text-success border small">
+                Logged in as {{ request.user.username }}
+              </span>
+            {% else %}
+              <span class="badge rounded-pill bg-warning-subtle text-warning border small">
+                Restricted – registration required
+              </span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="row g-3 mt-2">
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-start">
+              <div class="badge rounded-circle bg-white text-primary" style="width: 28px; height: 28px;">
+                1
+              </div>
+              <div class="small">
+                <div class="fw-semibold mb-1">Upload anonymised MRI/CT</div>
+                <div class="opacity-75">
+                  DICOM ZIP or NIfTI volumes are processed on the server side.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-start">
+              <div class="badge rounded-circle bg-white text-primary" style="width: 28px; height: 28px;">
+                2
+              </div>
+              <div class="small">
+                <div class="fw-semibold mb-1">AI segmentation & metrics</div>
+                <div class="opacity-75">
+                  Tumour localisation, 3D masks and basic volumetry are computed automatically.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="d-flex gap-3 align-items-start">
+              <div class="badge rounded-circle bg-white text-primary" style="width: 28px; height: 28px;">
+                3
+              </div>
+              <div class="small">
+                <div class="fw-semibold mb-1">Clinical review & export</div>
+                <div class="opacity-75">
+                  Visual overlays and PDF reports support decision making and documentation.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="card card-soft border-0 shadow-sm mb-4">
+      <div class="card-body p-4 p-md-5">
+
+        <!-- Purpose -->
+        <h2 class="h6 text-uppercase text-muted mb-2">Platform purpose</h2>
+        <p class="mb-3">
+          BrainWeb is a closed clinical tool that integrates AI models into everyday neuroimaging workflow.
+          The platform does <strong>not</strong> replace radiologists; instead it provides fast, reproducible
+          measurements and visualisations that can support expert interpretation of brain tumours.
+        </p>
+        <ul class="small text-muted mb-4">
+          <li>Upload brain MRI/CT studies in anonymised form.</li>
+          <li>Run AI-assisted tumour detection and segmentation.</li>
+          <li>Inspect slice-by-slice overlays inside the viewer.</li>
+          <li>Export a structured PDF report with volumes and diameters.</li>
+        </ul>
+
+        <!-- Access policy -->
+        <h2 class="h6 text-uppercase text-muted mb-2">Who can use BrainWeb?</h2>
+        <p class="mb-3">
+          For patient safety and data protection, access is
+          <strong>limited to authorised clinical staff and approved research collaborators</strong>.
+          Public self-registration is intentionally disabled. Anonymous visitors cannot:
+        </p>
+        <ul class="small text-muted mb-4">
+          <li>upload or download any imaging data;</li>
+          <li>view dashboards, AI results or patient information;</li>
+          <li>use the built-in AI assistant with clinical context.</li>
+        </ul>
+
+        <div class="alert alert-warning small mb-4">
+          <strong>Important:</strong>
+          if you are not registered in the system, you will not be able to use BrainWeb.
+          First-time visitors should read this page and contact the administrator to request an account.
+        </div>
+
+        <!-- How to get an account -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-7">
+            <h2 class="h6 text-uppercase text-muted mb-2">How to request access</h2>
+            <p class="mb-2">
+              To obtain a BrainWeb account, please contact your local system administrator or PACS coordinator.
+              Your role (radiologist, neurosurgeon, resident, researcher, etc.) will determine which features you see.
+            </p>
+            <ul class="small mb-3">
+              <li>Send an email from your institutional address.</li>
+              <li>Specify your full name, department and role.</li>
+              <li>Mention whether you will use BrainWeb for clinical work or research.</li>
+            </ul>
+            <p class="small text-muted mb-0">
+              After approval, you will receive login credentials or information on how to use your institutional
+              single sign-on (if enabled).
+            </p>
+          </div>
+          <div class="col-md-5">
+            <div class="border rounded-3 p-3 bg-light small h-100">
+              <div class="fw-semibold mb-1">Contact for registration</div>
+              <p class="mb-1">
+                Email:
+                <a href="mailto:musabekmusayev98@gmail.com">musabekmusayev98@gmail.com</a>
+              </p>
+              <p class="mb-2">
+                Or contact your department IT / PACS administrator.
+              </p>
+              <div class="border-top pt-2 mt-2 text-muted">
+                Requests from personal email addresses may be rejected
+                for security reasons.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- How the user should proceed -->
+        <h2 class="h6 text-uppercase text-muted mb-2">What happens when you first visit?</h2>
+        <ol class="small text-muted mb-4">
+          <li>You are redirected to this page to understand the purpose and access rules.</li>
+          <li>If you already have an account, you can go to the login page and enter your credentials.</li>
+          <li>If you do not have an account, you must contact the administrator and wait for approval.</li>
+        </ol>
+
+        <div class="d-flex flex-wrap align-items-center gap-2">
+          {% if request.user.is_authenticated %}
+            <a href="{% url 'tumor:dashboard' %}" class="btn btn-primary btn-sm">
+              Go to dashboard
+            </a>
+          {% else %}
+            <a href="{% url 'tumor:login' %}" class="btn btn-primary btn-sm">
+              Proceed to login
+            </a>
+            <span class="small text-muted">
+              (use only if you already have an approved account)
+            </span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Safety disclaimer -->
+    <div class="alert alert-secondary small border-0 shadow-sm">
+      <strong>Clinical disclaimer:</strong>
+      BrainWeb outputs are generated by machine learning models and are intended to assist,
+      not replace, qualified medical professionals. Final clinical decisions must always
+      be made by authorised physicians based on the full clinical context.
+    </div>
+
+  </div>
+</div>
+
+{% endblock %}

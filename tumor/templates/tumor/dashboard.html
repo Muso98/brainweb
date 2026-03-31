@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Dashboard · BrainWeb{% endblock %}
+
+{% block content %}
+
+<!-- Top hero / header -->
+<div class="card border-0 shadow-sm mb-4"
+     style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 50%, #0dcaf0 100%); color: #fff;">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <h1 class="h3 mb-1">Dashboard</h1>
+        <p class="mb-0" style="opacity: 0.85;">
+          Overview of your brain tumor studies and AI analysis activity.
+        </p>
+      </div>
+
+      <div class="d-flex flex-column align-items-end">
+        <a href="{% url 'tumor:study_list' %}" class="btn btn-light btn-sm mb-2">
+          + New study
+        </a>
+        <span class="small" style="opacity: 0.85;">
+          Logged in as <strong>{{ request.user.username }}</strong>
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Top stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Total studies</div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0">{{ total_studies }}</div>
+          <span class="badge bg-light text-muted border small">All cases</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Completed</div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0 text-success">{{ completed_studies }}</div>
+          <span class="badge bg-success-subtle text-success border small">Done</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Processing</div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0 text-primary">{{ processing_studies }}</div>
+          <span class="badge bg-primary-subtle text-primary border small">In queue</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-3">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="text-muted small mb-1">Errors</div>
+        <div class="d-flex align-items-end justify-content-between">
+          <div class="h3 mb-0 text-danger">{{ error_studies }}</div>
+          <span class="badge bg-danger-subtle text-danger border small">Check logs</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <!-- Line chart: studies per day -->
+  <div class="col-lg-7">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Studies in last 7 days</h5>
+          <span class="text-muted small">Daily count</span>
+        </div>
+        <p class="text-muted small mb-3">
+          Activity trend of uploaded MRI/CT studies over the last week.
+        </p>
+
+        <!-- Max balandlikni ota div boshqaradi -->
+        <div style="position: relative; height: 230px;">
+          <canvas id="studiesPerDayChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Doughnut chart: tumor classes -->
+  <div class="col-lg-5">
+    <div class="card card-soft h-100">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <h5 class="card-title mb-0">Tumor types</h5>
+          <span class="text-muted small">
+            {% if class_labels %}Based on AI classification{% else %}No data yet{% endif %}
+          </span>
+        </div>
+
+        {% if class_labels %}
+          <p class="text-muted small mb-3">
+            Distribution of predicted tumor types across your processed studies.
+          </p>
+
+          <div style="position: relative; height: 230px;">
+            <canvas id="tumorTypesChart"></canvas>
+          </div>
+
+          {% if avg_volume %}
+            <p class="mt-3 mb-0 text-muted small">
+              Avg tumor volume: <strong>{{ avg_volume|floatformat:1 }} mm³</strong>
+            </p>
+          {% endif %}
+        {% else %}
+          <div class="mt-4 text-muted small">
+            No completed AI classifications yet. Once you upload and process MRI/CT cases,
+            their predicted tumor types will appear here.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent studies table -->
+<div class="card card-soft">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-2">
+      <h5 class="card-title mb-0">Recent studies</h5>
+      <a href="{% url 'tumor:study_list' %}" class="small">View all</a>
+    </div>
+    <p class="text-muted small mb-3">
+      Latest uploaded cases with their current processing status.
+    </p>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>ID</th>
+            <th>Patient</th>
+            <th>Modality</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in recent_studies %}
+            <tr>
+              <td class="text-muted small">#{{ s.id }}</td>
+              <td>{{ s.patient }}</td>
+              <td>
+                <span class="badge bg-light text-dark border small">
+                  {{ s.modality }}
+                </span>
+              </td>
+              <td>
+                {% if s.status == "done" %}
+                  <span class="badge bg-success-subtle text-success border small">Done</span>
+                {% elif s.status == "processing" or s.status == "pending" %}
+                  <span class="badge bg-primary-subtle text-primary border small">Processing</span>
+                {% elif s.status == "error" %}
+                  <span class="badge bg-danger-subtle text-danger border small">Error</span>
+                {% else %}
+                  <span class="badge bg-secondary-subtle text-secondary border small">
+                    {{ s.status|title }}
+                  </span>
+                {% endif %}
+              </td>
+              <td class="text-muted small">
+                {{ s.created_at|date:"Y-m-d H:i" }}
+              </td>
+              <td class="text-end">
+                <a href="{% url 'tumor:study_detail' s.id %}"
+                   class="btn btn-outline-secondary btn-sm">
+                  View
+                </a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-muted small">
+                <em>No studies yet. Upload your first MRI/CT from the Studies page.</em>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- === Charts data & scripts === -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+  // Backenddan kelgan ma'lumotlar
+  const studiesPerDayLabels = {{ daily_labels|safe }};
+  const studiesPerDayCounts = {{ daily_counts|safe }};
+  const tumorTypeLabels = {{ class_labels|safe }};
+  const tumorTypeCounts = {{ class_counts|safe }};
+
+  // Line chart – studies per day
+  (function() {
+    const canvasLine = document.getElementById('studiesPerDayChart');
+    if (!canvasLine) return;
+
+    const ctxLine = canvasLine.getContext('2d');
+
+    new Chart(ctxLine, {
+      type: 'line',
+      data: {
+        labels: studiesPerDayLabels,
+        datasets: [{
+          label: 'Studies',
+          data: studiesPerDayCounts,
+          tension: 0.3,
+          fill: true,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,   // balandlikni ota div boshqaradi
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0
+            }
+          }
+        },
+        plugins: {
+          legend: {
+            display: false
+          },
+          tooltip: {
+            mode: 'index',
+            intersect: false
+          }
+        }
+      }
+    });
+  })();
+
+  // Doughnut chart – tumor classes
+  (function() {
+    if (!tumorTypeLabels || tumorTypeLabels.length === 0) return;
+
+    const canvasPie = document.getElementById('tumorTypesChart');
+    if (!canvasPie) return;
+
+    const ctxPie = canvasPie.getContext('2d');
+
+    new Chart(ctxPie, {
+      type: 'doughnut',
+      data: {
+        labels: tumorTypeLabels,
+        datasets: [{
+          data: tumorTypeCounts
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        cutout: '55%',
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: {
+              boxWidth: 12
+            }
+          }
+        }
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

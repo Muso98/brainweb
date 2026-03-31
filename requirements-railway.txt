@@ -1,0 +1,130 @@
+# =====================================================
+# requirements-railway.txt - Railway production (slim, CPU-only)
+# =====================================================
+
+# PyTorch CPU-only (nvidia-*, triton, cudnn o'rnatilmaydi)
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- Web Framework ---
+Django==5.2.8
+djangorestframework==3.16.1
+asgiref==3.10.0
+sqlparse==0.5.3
+
+# --- Production Server ---
+gunicorn==23.0.0
+whitenoise==6.9.0
+
+# --- Database ---
+dj-database-url==2.3.0
+psycopg2-binary==2.9.10
+
+# --- Task Queue ---
+celery==5.5.3
+redis==5.2.1
+kombu==5.5.4
+amqp==5.3.1
+billiard==4.2.2
+vine==5.1.0
+click==8.3.0
+click-didyoumean==0.3.1
+click-plugins==1.1.1.2
+click-repl==0.3.0
+prompt_toolkit==3.0.52
+wcwidth==0.2.14
+
+# --- Env & HTTP ---
+python-dotenv==1.2.1
+requests==2.32.5
+urllib3==2.5.0
+certifi==2025.11.12
+httpx==0.28.1
+httpcore==1.0.9
+anyio==4.11.0
+sniffio==1.3.1
+h11==0.16.0
+idna==3.11
+
+# --- PyTorch CPU ONLY ---
+torch==2.5.1+cpu
+torchvision==0.20.1+cpu
+timm==1.0.22
+einops==0.8.1
+safetensors==0.6.2
+
+# --- Medical Imaging ---
+nibabel==5.3.2
+pydicom==3.0.1
+simpleitk==2.5.2
+connected-components-3d==3.26.1
+
+# --- Scientific Computing ---
+numpy==2.1.2
+scipy==1.15.3
+scikit-image==0.25.2
+scikit-learn==1.7.2
+pandas==2.3.3
+matplotlib==3.10.7
+
+# --- Image Processing ---
+pillow==11.3.0
+# Headless versiya: GUI/Qt yo'q, server uchun ideal (~300 MB tejaydi)
+opencv-python-headless==4.12.0.88
+
+# --- nnU-Net (segmentation) ---
+nnunetv2==2.6.2
+batchgenerators==0.25.1
+batchgeneratorsv2==0.3.0
+dynamic_network_architectures==0.4.2
+acvl_utils==0.2.5
+fft-conv-pytorch==1.2.0
+
+# --- Google Gemini (AI chatbot) ---
+google-genai==1.52.0
+google-generativeai==0.8.5
+google-api-core==2.28.1
+google-api-python-client==2.187.0
+google-auth==2.43.0
+proto-plus==1.26.1
+protobuf==5.29.5
+grpcio==1.76.0
+grpcio-status==1.71.2
+googleapis-common-protos==1.72.0
+huggingface_hub==1.1.2
+
+# --- PDF Export (hisobotlar) ---
+weasyprint==66.0
+tinycss2==1.4.0
+tinyhtml5==2.0.0
+pydyf==0.11.0
+cssselect2==0.8.0
+pyphen==0.17.2
+webencodings==0.5.1
+brotli==1.2.0
+zopfli==0.4.0
+fonttools==4.60.1
+
+# --- QR Code ---
+qrcode==8.2
+
+# --- Utilities ---
+pyyaml==6.0.3
+packaging==25.0
+tqdm==4.67.1
+filelock==3.19.1
+fsspec==2025.9.0
+networkx==3.3
+pytz==2025.2
+tzdata==2025.2
+six==1.17.0
+joblib==1.5.2
+threadpoolctl==3.6.0
+python-dateutil==2.9.0.post0
+lazy_loader==0.4
+pydantic==2.12.5
+pydantic_core==2.41.5
+typing_extensions==4.15.0
+Jinja2==3.1.6
+MarkupSafe==2.1.5
+mpmath==1.3.0
+sympy==1.13.1

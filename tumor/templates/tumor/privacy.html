@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h2 class="fw-semibold mb-3">Privacy Policy</h2>
+  <p class="text-muted small">
+    Ushbu maxfiylik siyosati BrainWeb platformasi tomonidan tibbiy tasvirlar, foydalanuvchi ma'lumotlari
+    va diagnostik jarayonlarda yaratilgan natijalarni qanday yig‘ilishi, qayta ishlanishi va himoyalanishini
+    tushuntiradi. Platforma HIPAA, GDPR va xalqaro tibbiy ma’lumotlar xavfsizligi standartlariga mos ishlab chiqilgan.
+  </p>
+
+  <hr class="my-4">
+
+  <!-- Section 1 -->
+  <h5 class="fw-bold mt-3">1. Yig‘iladigan ma’lumotlar</h5>
+  <p class="text-muted small mb-1">
+    BrainWeb diagnostika jarayonida quyidagi turdagi ma’lumotlarni yig‘ishi mumkin:
+  </p>
+
+  <ul class="small text-muted">
+    <li><strong>DICOM tasvirlari:</strong> MRI/CT tasvirlari, metadata, texnik parametrlar.</li>
+    <li><strong>Tizim loglari:</strong> texnik xatoliklar, audit izlari, sessiya ma’lumotlari.</li>
+    <li><strong>Foydalanuvchi ma’lumotlari:</strong> login, ism, email, rollar va ruxsatlar.</li>
+  </ul>
+
+  <p class="small text-muted">
+    DICOM fayllari yuklanganda bemor identifikatori (Patient Name, ID, DOB va boshqalar) avtomatik ravishda
+    <strong>de-identification</strong> jarayonidan o‘tkaziladi.
+  </p>
+
+  <hr>
+
+  <!-- Section 2 -->
+  <h5 class="fw-bold mt-3">2. Ma’lumotlarni saqlash va himoyalash</h5>
+  <p class="small text-muted">
+    Tibbiy ma’lumotlar quyidagi xavfsizlik choralari asosida himoyalanadi:
+  </p>
+
+  <ul class="small text-muted">
+    <li>HTTPS orqali to‘liq shifrlangan trafik</li>
+    <li>Server darajasida AES-256 shifrlash</li>
+    <li>Role-based Access Control (RBAC)</li>
+    <li>Audit loglari va muntazam monitoring</li>
+    <li>Cheklangan muddatda saqlash siyosati (Data Retention Policy)</li>
+  </ul>
+
+  <p class="small text-muted">
+    Ma’lumotlar maxfiyligi server provayderining HIPAA-eligible yoki GDPR-compliant infratuzilmasida saqlanadi.
+  </p>
+
+  <hr>
+
+  <!-- Section 3 -->
+  <h5 class="fw-bold mt-3">3. Ma’lumotlarni uchinchi tomon bilan bo‘lishish</h5>
+  <p class="small text-muted">
+    BrainWeb foydalanuvchi ma’lumotlarini uchinchi tomon bilan <strong>hech qachon</strong> tijoriy maqsadlarda bo‘lishmaydi.
+    Ma’lumotlar faqat:
+  </p>
+
+  <ul class="small text-muted">
+    <li>Qonun talab qilganda</li>
+    <li>Foydalanuvchi roziligi asosida</li>
+    <li>Anonimlashtirilgan tadqiqot maqsadlarida</li>
+  </ul>
+
+  <hr>
+
+  <!-- Section 4 -->
+  <h5 class="fw-bold mt-3">4. Tibbiy ma’lumotlar bilan ishlash (HIPAA/GDPR)</h5>
+  <p class="small text-muted">
+    Tizim bemor shaxsiga oid barcha identifikatorlarni ishlov berishdan oldin o‘chiradi yoki randomizatsiya qiladi:
+  </p>
+
+  <ul class="small text-muted">
+    <li>Patient Name → o‘chiriladi</li>
+    <li>Patient ID → random identifikatorga almashtiriladi</li>
+    <li>Birth Date → noaniq formatga o‘tkaziladi</li>
+    <li>Klinik metadata → minimal zaruriy qismida saqlanadi</li>
+  </ul>
+
+  <p class="small text-muted">
+    Ushbu jarayon DICOM de-identification standartlariga to‘liq mos.
+  </p>
+
+  <hr>
+
+  <!-- Section 5 -->
+  <h5 class="fw-bold mt-3">5. Ma’lumotlarni saqlash muddati</h5>
+  <p class="small text-muted">
+    Tibbiy ma’lumotlar faqat diagnostika jarayoni uchun zarur bo‘lgan muddat davomida saqlanadi.
+    Foydalanuvchi istagiga ko‘ra ma’lumotlarni istalgan vaqtda o‘chirish mumkin.
+  </p>
+
+  <hr>
+
+  <!-- Section 6 -->
+  <h5 class="fw-bold mt-3">6. Foydalanuvchi huquqlari</h5>
+  <p class="small text-muted">
+    GDPR talablariga muvofiq, foydalanuvchi quyidagi huquqlarga ega:
+  </p>
+
+  <ul class="small text-muted">
+    <li>Ma’lumotlarni ko‘rish</li>
+    <li>O‘zgartirish</li>
+    <li>O‘chirish (“Right to be Forgotten”)</li>
+    <li>Ma’lumotlarni ko‘chirish (Data Portability)</li>
+  </ul>
+
+  <hr>
+
+  <!-- Section 7 -->
+  <h5 class="fw-bold mt-3">7. Kontakt</h5>
+  <p class="small text-muted">
+    Maxfiylik siyosati bo‘yicha savollar uchun:
+    <br>
+    <strong>Email:</strong> <a href="mailto:support@brainweb.ai">support@brainweb.ai</a>
+  </p>
+
+</div>
+{% endblock %}

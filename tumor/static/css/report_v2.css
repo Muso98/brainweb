@@ -1,0 +1,81 @@
+/* --- PDF sahifalash va rasm-galereya uchun tavsiya qilingan CSS --- */
+
+/* Umumiy sahifa o'lchami va marginlar */
+@page {
+  size: A4;
+  margin: 18mm 16mm; /* kerak bo'lsa sozlang */
+}
+
+/* Sahifa ichida element bo'linmasligi kerak bo'lgan konteynerlar */
+.avoid-break, .slice-item, .slice-grid, .preview3d, .overlay-box {
+  /* WeasyPrint uchun asosiy qoidalar */
+  page-break-inside: avoid;
+  break-inside: avoid;
+  -webkit-column-break-inside: avoid;
+}
+
+/* Slice gallery grid: ikki ustun, responsive */
+.slice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px 14px;
+  align-items: start;
+  margin: 6mm 0;
+}
+
+/* Har bir slice elementining o'lchamlari — rasm sahifada mos joylashadi */
+.slice-item {
+  display: block;
+  text-align: center;
+  /* bu konteyner sahifa ichida bo'linmasin */
+  page-break-inside: avoid;
+  break-inside: avoid;
+  padding: 6px;
+  background: white;
+}
+
+/* Rasmni qirqmaslik va o'lchamini cheklash */
+.slice-item img {
+  display: block;
+  max-width: 100%;
+  /* max-height ni sahifa marginlariga moslab belgilang:
+     A4 sahifa — balandligi ~297mm; header/footer hisoblanadi.
+     260–300px bu ko'p hollarda sahifani buzmaydi; sozlang agar kerak. */
+  max-height: 260px;
+  height: auto;
+  margin: 0 auto 6px;
+  object-fit: contain;
+}
+
+/* Caption */
+.slice-caption {
+  font-size: 10px;
+  color: #333;
+  margin-top: 4px;
+}
+
+/* Agarda grid bo'lib ketsa ham, satr bo'linmasligi uchun */
+.slice-row {
+  display: contents; /* WeasyPrint qo'llab-quvvatlashiga qarab */
+}
+
+/* Katta preview/3D snapshot uchun */
+.preview3d {
+  text-align: center;
+  margin: 10px 0;
+  page-break-inside: avoid;
+}
+.preview3d img {
+  max-width: 320px;
+  max-height: 240px;
+  object-fit: contain;
+}
+
+/* Agar rasm/galereya oldida alohida sahifa boshlamoqchi bo'lsangiz */
+.page-break-before {
+  page-break-before: always;
+  break-before: page;
+}
+
+/* Minimal matn o'lchamlari va satr balandligi */
+body { font-family: "DejaVu Sans", Arial, sans-serif; line-height: 1.25; font-size: 12px; }

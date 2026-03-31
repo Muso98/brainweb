@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block title %}Documentation · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h2 class="fw-semibold mb-3">BrainWeb Documentation</h2>
+  <p class="text-muted fs-6">
+    BrainWeb — zamonaviy tibbiy sun’iy intellekt platformasi bo‘lib, u MRI tasvirlarida o‘smalarni aniqlash, segmentatsiya qilish va klinik qaror qabul qilish jarayonini sezilarli darajada tezlashtirishga mo‘ljallangan. Platforma klinisyenlar, tadqiqotchilar va ta’lim muassasalari uchun yuqori aniqlikdagi AI diagnostikasini taqdim etadi.
+  </p>
+
+  <hr class="my-4">
+
+  <!-- Section 1 -->
+  <h4 class="fw-bold">1. Platformaning umumiy arxitekturasi</h4>
+  <p class="text-muted">
+    BrainWeb modulli arxitektura asosida qurilgan bo‘lib, butun diagnostika jarayonini to‘liq avtomatlashtiradi. Asosiy komponentlar:
+  </p>
+
+  <ul>
+    <li><strong>AI Moduli</strong> — MRI tasvirlarini qayta ishlaydi, o‘smalarni aniqlaydi, hajmini hisoblaydi va 3D segmentatsiya maskalarini yaratadi.</li>
+    <li><strong>2D/3D Vizualizatsiya Moduli</strong> — anatomik kesimlarni, topilgan o‘smalarni va ularning o‘rini to‘liq uch o‘lchamli ko‘rinishda aks ettiradi.</li>
+    <li><strong>Web Platform</strong> — foydalanuvchi uchun qulay boshqaruv paneli, statistik kuzatuv, hisobot generatsiyasi va tadqiqotlarni boshqarish imkoniyatlari.</li>
+  </ul>
+
+  <div class="alert alert-info small mt-2">
+    Platforma Docker, GPU inference va server-side parallelizatsiya yordamida katta hajmdagi MRI ma’lumotlarini tez va barqaror qayta ishlaydi.
+  </div>
+
+  <hr>
+
+  <!-- Section 2 -->
+  <h4 class="fw-bold">2. AI ishlash jarayoni</h4>
+  <p class="text-muted">
+    Diagnostika jarayoni quyidagi bosqichlarda amalga oshiriladi:
+  </p>
+
+  <ol class="fs-6">
+    <li><strong>DICOM yuklash</strong> — foydalanuvchi MRI seriyasini tizimga joylaydi.</li>
+    <li><strong>Preprocessing</strong> — normalizatsiya, shovqinni yo‘qotish, orientatsiyani tekislash va voxel spacingni moslashtirish.</li>
+    <li><strong>Model inference</strong> — U-Net, nnU-Net va ResNet asosida yaratilgan gibrid arxitekturamiz o‘smalarni aniqlaydi.</li>
+    <li><strong>Segmentatsiya natijalari</strong> — 2D kesimlar va to‘liq 3D ko‘rinish eksporti avtomatik yaratiladi.</li>
+  </ol>
+
+  <p class="text-muted small">
+    Modellar klinik datasetlar (BraTS, TCIA) asosida o‘qitilgan. Transfer-learning vositasida yangi kasalxona ma’lumotlariga moslashuv imkoniyati mavjud.
+  </p>
+
+  <hr>
+
+  <!-- Section 3 -->
+  <h4 class="fw-bold">3. Dashboard funksiyalari</h4>
+  <p class="text-muted mb-2">
+    Boshqaruv paneli foydalanuvchiga quyidagi imkoniyatlarni taqdim etadi:
+  </p>
+
+  <ul>
+    <li>Avtomatik AI natijalarini ko‘rish va tahlil qilish</li>
+    <li>3D o‘smalar modelini aylantirish, kattalashtirish, kesimlar bo‘yicha tekshirish</li>
+    <li>O‘smalar hajmi, maksimal diametri va yo‘nalishlari bo‘yicha tahlil</li>
+    <li>PDF formatida klinik hisobot generatsiyasi</li>
+    <li>Tadqiqotlar bo‘limida barcha MRI seanslarini boshqarish</li>
+  </ul>
+
+  <div class="alert alert-secondary small">
+    Dashboard real vaqt rejimida status monitoringni qo‘llab-quvvatlaydi va parallel ishlov berilayotgan tadqiqotlarni kuzatadi.
+  </div>
+
+  <hr>
+
+  <!-- Section 4 -->
+  <h4 class="fw-bold">4. DICOM yuklash talablari</h4>
+  <ul class="fs-6">
+    <li>Standart DICOM (.dcm) fayllari qo‘llab-quvvatlanadi</li>
+    <li>Minimal seriya uzunligi — 32 slice</li>
+    <li>Tavsiya etiladigan MRI turlari — T1, T1-GD, T2, FLAIR</li>
+    <li>Maksimal yuklash hajmi — 500 MB</li>
+  </ul>
+
+  <hr>
+
+  <!-- Section 5 -->
+  <h4 class="fw-bold">5. API Hujjati</h4>
+  <p class="text-muted small">Platformani integratsiya qilish uchun yengil API interfeysi mavjud.</p>
+
+  <pre class="bg-light p-3 rounded small">
+POST /api/analyze/
+Fayl: MRI ZIP yoki DICOM papkasi
+Natija: JSON + segmentation mask
+  </pre>
+
+  <pre class="bg-light p-3 rounded small">
+GET /api/studies/{id}/
+Natija: MRI metadata, AI natijalari, 3D model havolalari
+  </pre>
+
+  <hr>
+
+  <!-- Section 6 -->
+  <h4 class="fw-bold">6. Foydalanuvchi rollari</h4>
+  <p class="text-muted">
+    Tizim xavfsizlikni ta’minlash uchun rolga asoslangan ruxsat nazorati (RBAC)dan foydalanadi:
+  </p>
+
+  <ul class="fs-6">
+    <li><strong>Admin</strong> — barcha modul va foydalanuvchilarni boshqaradi</li>
+    <li><strong>Researcher</strong> — tadqiqotlar va ma’lumotlar bilan ishlaydi</li>
+    <li><strong>Clinician</strong> — tibbiy natijalarni ko‘radi va tahlil qiladi</li>
+    <li><strong>Student</strong> — cheklangan bilim olish rejimida ishlaydi</li>
+  </ul>
+
+  <hr>
+
+  <!-- Section 7 -->
+  <h4 class="fw-bold">7. Xavfsizlik va maxfiylik</h4>
+  <p class="text-muted">
+    BrainWeb tibbiy ma’lumotlar ustida ishlashda xalqaro standartlarga mos quyidagi choralarni qo‘llaydi:
+  </p>
+
+  <ul>
+    <li>HTTPS orqali to‘liq shifrlangan trafik</li>
+    <li>DICOM de-identification (bemorning shaxsiy ma’lumotlari avtomatik o‘chiriladi)</li>
+    <li>Role-based access control (RBAC)</li>
+    <li>Audit loglari va diagnostik monitoring</li>
+    <li>Serverlar darajasida ma’lumotlarni shifrlash (AES-256)</li>
+  </ul>
+
+  <div class="alert alert-info small mt-2">
+    Platforma GDPR va HIPAA talablariga mos keluvchi arxitekturaga ega.
+  </div>
+
+  <hr>
+
+  <!-- Section 8 -->
+  <h4 class="fw-bold">8. Cheklovlar va aniqlik ko‘rsatkichlari</h4>
+  <p class="text-muted">
+    Model klinik datasetlarda o‘rtacha <strong>86–92% IoU</strong> aniqlik ko‘rsatgan. Natija klinik sharoit, MRI sifati va o‘smalar morfologiyasiga qarab farq qilishi mumkin.
+  </p>
+
+  <div class="alert alert-warning small">
+    AI klinik qarorlar uchun yordamchi vosita hisoblanadi va shifokor xulosasini to‘liq almashtirmaydi.
+  </div>
+
+  <hr>
+
+  <!-- Section 9 -->
+  <h4 class="fw-bold">9. Qo‘llab-quvvatlash va texnik yordam</h4>
+  <p class="text-muted mb-1">Savollar va texnik yordam uchun:</p>
+
+  <ul class="small">
+    <li>Email: <a href="mailto:support@brainweb.ai">support@brainweb.ai</a></li>
+    <li>GitHub: github.com/brainweb</li>
+    <li>Telegram Support: @brainweb_support</li>
+  </ul>
+
+</div>
+{% endblock %}

@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% block title %}FAQ · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <h2 class="fw-semibold mb-3">FAQ — Tez-tez so'raladigan savollar</h2>
+  <p class="text-muted mb-4">
+    Quyida BrainWeb platformasidan foydalanishda eng ko‘p beriladigan savollarga javoblarni topishingiz mumkin.
+    Maqsad — foydalanuvchilarga diagnostika jarayonini yanada aniq va samarali tushuntirish.
+  </p>
+
+  <div class="accordion" id="faqAccordion">
+
+    <!-- 1 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q1">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+          1. DICOM formatlari qaysilar qo‘llanadi?
+        </button>
+      </h2>
+      <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          BrainWeb barcha standart <strong>DICOM (.dcm)</strong> tasvirlarini qo‘llab-quvvatlaydi.
+          Tavsiya etilgan MRI sekvensiyalar:
+          <ul>
+            <li>T1</li>
+            <li>T1-Gadolinium (T1-GD)</li>
+            <li>T2</li>
+            <li>FLAIR</li>
+          </ul>
+          Minimal talab — <strong>32 ta slice</strong>dan iborat to‘liq seriya.
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q2">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+          2. BrainWeb AI modeli qanday ishlaydi?
+        </button>
+      </h2>
+      <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Model U-Net, nnU-Net va ResNet arxitekturalari asosida yaratilgan gibrid tizim orqali MRI tasvirlaridan o‘smalarni
+          <strong>aniqlaydi, segmentatsiya qiladi va ularning hajmi</strong>ni hisoblaydi.
+          Jarayon to‘liq avtomatlashtirilgan bo‘lib, foydalanuvchi faqat DICOM faylni yuklashi kifoya.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q3">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+          3. Natijalarni 3D ko‘rinishda ko‘rish mumkinmi?
+        </button>
+      </h2>
+      <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Ha, platforma avtomatik ravishda <strong>3D o‘smalar modelini</strong> yaratadi.
+          Foydalanuvchi vizualizatsiya panelida o‘smalarni aylantirishi, kattalashtirishi yoki kesimlar bo‘yicha ko‘rib chiqishi mumkin.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q4">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+          4. AI tomonidan chiqarilgan natijalarning aniqligi qanday?
+        </button>
+      </h2>
+      <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Model BraTS va TCIA kabi klinik datasetlarda <strong>86–92% IoU</strong> aniqlikka erishgan.
+          Natijalar MRI sifati, shovqin darajasi va o‘smalarning morfologiyasiga qarab farq qilishi mumkin.
+        </div>
+      </div>
+    </div>
+
+    <!-- 5 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q5">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+          5. Bemor ma’lumotlari xavfsizmi?
+        </button>
+      </h2>
+      <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Ha. BrainWeb xalqaro standartlarga mos xavfsizlik choralarini qo‘llaydi:
+          <ul>
+            <li>HTTPS orqali to‘liq shifrlangan trafik</li>
+            <li>DICOM de-identification (bemor ma’lumotlarini avtomatik yashirish)</li>
+            <li>Role-based Access Control (RBAC)</li>
+            <li>Audit loglari va monitoring</li>
+          </ul>
+          Arxitektura GDPR va HIPAA talablari bilan mos ishlaydi.
+        </div>
+      </div>
+    </div>
+
+    <!-- 6 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q6">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">
+          6. PDF hisobot yaratish imkoniyati bormi?
+        </button>
+      </h2>
+      <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Ha. Har bir tadqiqot bo‘yicha AI natijalari asosida <strong>to‘liq PDF hisobot</strong> yaratiladi.
+          Hisobotda quyidagilar aks etadi:
+          <ul>
+            <li>O‘smalar 2D va 3D tasvirlari</li>
+            <li>Tumor hajmi va maksimal diametri</li>
+            <li>Segmentatsiya maskalari</li>
+            <li>Radiolog uchun sharh maydoni</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q7">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse7">
+          7. BrainWeb klinik qarorni to‘liq almashtiradimi?
+        </button>
+      </h2>
+      <div id="collapse7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Yo‘q. BrainWeb tibbiy qaror qabul qilishni <strong>yordamchi vosita sifatida</strong> qo‘llab-quvvatlaydi.
+          Yakuniy klinik xulosa shifokor tomonidan berilishi shart.
+        </div>
+      </div>
+    </div>
+
+    <!-- 8 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q8">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse8">
+          8. Platformani boshqa tizimlarga ulash mumkinmi?
+        </button>
+      </h2>
+      <div id="collapse8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Ha, BrainWeb yengil REST API orqali tashqi tizimlar bilan integratsiyani qo‘llab-quvvatlaydi.
+          Masalan:
+          <pre class="bg-light p-2 rounded small mb-0">
+POST /api/analyze/
+GET /api/studies/{id}
+          </pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- 9 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q9">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse9">
+          9. O‘smalarning 3D modeli qayerda yaratiladi?
+        </button>
+      </h2>
+      <div id="collapse9" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          3D model AI segmentatsiya maskasi asosida avtomatik generatsiya qilinadi va Three.js yordamida brauzerda ko‘rsatiladi.
+          Barcha 3D ma’lumotlar serverda xavfsiz saqlanadi.
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 -->
+    <div class="accordion-item">
+      <h2 class="accordion-header" id="q10">
+        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse10">
+          10. Platformadan foydalanish uchun qanday qurilma kerak?
+        </button>
+      </h2>
+      <div id="collapse10" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+        <div class="accordion-body">
+          Hech qanday maxsus dastur talab qilinmaydi.
+          BrainWeb to‘liq <strong>web-based</strong> bo‘lib, kompyuter yoki planshet orqali ishga tushiriladi.
+          GPU ishlov berish server tomonida amalga oshiriladi.
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,285 @@
+/* ==========================================================================
+   main.css — BrainWeb (clean, accessible, responsive)
+   Author: Nasridinov Rustamjon (suggested)
+   ========================================================================== */
+
+/* -------------------------
+   :root — theming variables
+   ------------------------- */
+:root{
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --muted: #6b7280;
+  --text: #0b2545;
+  --accent: #4f46e5;
+  --success: #16a34a;
+  --danger: #ef4444;
+  --glass: rgba(15,23,42,0.06);
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+
+  --shadow-sm: 0 4px 12px rgba(15,23,42,0.06);
+  --shadow-md: 0 12px 28px rgba(15,23,42,0.08);
+  --shadow-lg: 0 24px 48px rgba(15,23,42,0.12);
+
+  --max-width: 1200px;
+}
+
+/* -------------------------
+   Global reset / base rules
+   ------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html,body {
+  height: 100%;
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  line-height: 1.45;
+  font-size: 16px;
+}
+
+img { max-width: 100%; height: auto; display: block; }
+
+/* -------------------------
+   Container utilities
+   ------------------------- */
+.container-lg {
+  max-width: var(--max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* -------------------------
+   Cards, buttons, badges
+   ------------------------- */
+.card-soft {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: 1rem;
+  border: 1px solid rgba(11,37,69,0.04);
+}
+
+.card-hover {
+  transition: transform .18s ease, box-shadow .18s ease;
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+.btn-soft {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .45rem .85rem;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(0,0,0,0.02));
+  border: 1px solid rgba(11,37,69,0.06);
+  box-shadow: var(--shadow-sm);
+  color: var(--text);
+  text-decoration: none;
+  transition: transform .15s ease, box-shadow .15s ease;
+  cursor: pointer;
+}
+.btn-soft:hover, .btn-soft:focus {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 26px rgba(11,37,69,0.09);
+  outline: none;
+}
+.btn-primary {
+  background: linear-gradient(180deg, var(--accent), #4338ca);
+  color: #fff;
+  border: none;
+}
+.btn-primary:hover { filter: brightness(.98); }
+
+/* badge */
+.badge-pill {
+  display: inline-block;
+  padding: .28rem .6rem;
+  border-radius: 999px;
+  font-size: .75rem;
+  background: rgba(11,37,69,0.06);
+  color: var(--text);
+}
+
+/* -------------------------
+   Inputs & search
+   ------------------------- */
+input[type="text"], input[type="email"], textarea, select {
+  width: 100%;
+  padding: .6rem .75rem;
+  border-radius: 10px;
+  border: 1px solid rgba(11,37,69,0.06);
+  background: #fff;
+  transition: box-shadow .12s ease, border-color .12s ease;
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  box-shadow: 0 6px 18px rgba(79,70,229,0.08);
+  border-color: rgba(79,70,229,0.9);
+}
+
+/* search specific */
+.search-input { border-radius: 10px; }
+
+/* filter pill */
+.filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .25rem .6rem;
+  border-radius: 999px;
+  background: rgba(11,37,69,0.04);
+  color: var(--muted);
+  cursor: pointer;
+}
+.filter-pill.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(79,70,229,0.12);
+}
+
+/* -------------------------
+   Study list / table tweaks
+   ------------------------- */
+.study-item {
+  background: var(--surface);
+  border-radius: 12px;
+  padding: .8rem;
+  transition: transform .12s ease, box-shadow .12s ease;
+  border: 1px solid rgba(11,37,69,0.04);
+}
+.study-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+
+/* -------------------------
+   Floating brain loader
+   ------------------------- */
+.brain-loader { display:inline-flex; flex-direction:column; align-items:center; gap:.35rem; }
+.brain-loader-orbit {
+  width: 44px; height: 44px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #fff, var(--accent));
+  position: relative;
+  box-shadow: 0 0 0 0 rgba(79,70,229,0.4), 0 0 18px rgba(79,70,229,0.6);
+  animation: brain-pulse 1.4s ease-in-out infinite;
+}
+.brain-loader-emoji {
+  position: absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:1.25rem; user-select:none;
+}
+.brain-loader-dot {
+  position:absolute; width:9px; height:9px; border-radius:999px; background: var(--success); box-shadow:0 0 10px rgba(34,197,94,0.9);
+  top:-4px; left:50%; transform:translateX(-50%); animation: brain-orbit 1.2s linear infinite;
+}
+.brain-loader-text { font-size:.78rem; color: #e5e7eb; text-shadow:0 1px 2px rgba(0,0,0,0.18); }
+
+@keyframes brain-pulse {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79,70,229,0.4), 0 0 18px rgba(79,70,229,0.6); }
+  50% { transform: scale(1.06); box-shadow: 0 0 0 12px rgba(79,70,229,0), 0 0 28px rgba(79,70,229,0.9); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(79,70,229,0.4), 0 0 18px rgba(79,70,229,0.6); }
+}
+@keyframes brain-orbit {
+  0% { transform: translate(-50%,0) rotate(0deg) translateY(-2px); }
+  50% { transform: translate(-50%,0) rotate(180deg) translateY(2px); }
+  100% { transform: translate(-50%,0) rotate(360deg) translateY(-2px); }
+}
+
+#floating-brain-loader {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9999;
+  display: none; background: rgba(15,23,42,0.92); backdrop-filter: blur(8px);
+  padding: 12px 16px; border-radius: 14px; box-shadow: 0 10px 32px rgba(15,23,42,0.55);
+  pointer-events: none; transition: opacity .22s ease-in-out, transform .18s ease;
+}
+#floating-brain-loader.show { display:block; opacity:1; pointer-events:auto; transform: translateY(0); }
+#floating-brain-loader.hide { opacity:0; display:none; pointer-events:none; transform: translateY(8px); }
+
+/* -------------------------
+   Chatbot UI (minimal) — customize 'js/chatbot.js' accordingly
+   ------------------------- */
+#chatbot-container { position: fixed; right: 20px; bottom: 84px; z-index: 9998; }
+#chatbot-button {
+  width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+  background: var(--accent); color:#fff; cursor:pointer; box-shadow: var(--shadow-sm);
+}
+#chatbot-window {
+  width:320px; max-width: calc(100vw - 32px); border-radius:12px; overflow:hidden;
+  box-shadow: var(--shadow-lg); background: var(--surface); display:none; flex-direction:column;
+}
+#chatbot-window[aria-hidden="false"] { display:flex; }
+#chatbot-header { display:flex; align-items:center; gap:0.6rem; padding:.6rem .75rem; border-bottom:1px solid rgba(11,37,69,0.04); }
+#chatbot-messages { padding:.6rem; height:240px; overflow:auto; background: linear-gradient(180deg, rgba(250,250,252,1), rgba(245,247,251,1)); }
+#chatbot-form { display:flex; gap:.5rem; padding:.6rem; border-top:1px solid rgba(11,37,69,0.04); }
+
+/* -------------------------
+   Footer styles
+   ------------------------- */
+.bw-footer { background: #fbfcfe; padding-top:1.25rem; padding-bottom:1.25rem; }
+.bw-footer h6 { color: var(--text); margin:0 0 .5rem 0; font-size:1rem; }
+.bw-footer p, .bw-footer a { color: var(--muted); font-size:.875rem; }
+.bw-footer a { text-decoration:none; opacity:.85; }
+.bw-footer a:hover, .bw-footer a:focus { opacity:1; text-decoration:underline; }
+
+/* Newsletter form small tweak */
+#footer-newsletter-form { display:flex; gap:.5rem; align-items:center; }
+#footer-newsletter-form input[type="email"] { max-width: 220px; }
+
+/* -------------------------
+   Accessibility & focus styles
+   ------------------------- */
+a:focus, button:focus, input:focus, textarea:focus {
+  outline: 3px solid rgba(79,70,229,0.12);
+  outline-offset: 2px;
+}
+
+/* prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+}
+
+/* -------------------------
+   Dark mode (optional)
+   ------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0b1220;
+    --surface: #071126;
+    --muted: #9aa4b2;
+    --text: #e6eef8;
+    --accent: #7c3aed;
+    --glass: rgba(255,255,255,0.03);
+    --shadow-sm: 0 6px 18px rgba(0,0,0,0.6);
+    --shadow-md: 0 18px 40px rgba(0,0,0,0.6);
+  }
+  body { background: var(--bg); color: var(--text); }
+  .bw-footer { background: #051020; color: var(--muted); }
+  .card-soft { background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.04); }
+  .brain-loader-text { color: rgba(255,255,255,0.9); }
+}
+
+/* -------------------------
+   Responsive adjustments
+   ------------------------- */
+@media (max-width: 768px) {
+  .container-lg { padding-left: .75rem; padding-right: .75rem; }
+  #chatbot-container { right: 12px; bottom: 84px; }
+  #floating-brain-loader { right: 12px; bottom: 12px; }
+  #chatbot-window { width: 92vw; max-width: 420px; }
+}
+
+@media (max-width: 420px) {
+  #chatbot-window { width: 100vw; right:0; border-radius: 12px 12px 0 0; bottom: 0; }
+  #chatbot-container { bottom: 64px; right: 8px; }
+}

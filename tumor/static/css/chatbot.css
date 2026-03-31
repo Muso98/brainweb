@@ -1,0 +1,205 @@
+/* Butun chat vidjet konteyneri - sudraladigan qism */
+#chatbot-container {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 9999;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+}
+
+/* Tugma - yumaloq, gradient fon, shadow */
+#chatbot-button {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 64px;
+  height: 64px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30px;
+  cursor: grab;
+  user-select: none;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#chatbot-button:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.4);
+}
+
+#chatbot-button:active {
+  cursor: grabbing;
+  transform: scale(0.97);
+}
+
+/* Chat oynasi - pozitsiya JS orqali o'rnatiladi */
+#chatbot-window {
+  width: 340px;
+  height: 440px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.45);
+  position: absolute;
+  display: none;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+/* Header qismi */
+#chatbot-header {
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Header chap tomoni: avatar + nom + status */
+.chatbot-header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chatbot-avatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.chatbot-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chatbot-status {
+  font-size: 0.7rem;
+  opacity: 0.9;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+/* Headerdagi yopish tugmasi */
+#chatbot-close {
+  cursor: pointer;
+  font-size: 18px;
+  padding: 0 4px;
+  opacity: 0.9;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+#chatbot-close:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Xabarlar qismi */
+#chatbot-messages {
+  height: 320px;
+  padding: 10px 10px 6px;
+  overflow-y: auto;
+  font-size: 0.86rem;
+  background: radial-gradient(circle at top left, #eff6ff 0, #f9fafb 60%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Xabarlar - bubble ko'rinishida */
+.chat-message {
+  margin-bottom: 4px;
+  line-height: 1.4;
+  max-width: 80%;
+  padding: 8px 10px;
+  border-radius: 14px;
+  font-size: 0.86rem;
+  word-wrap: break-word;
+  word-break: break-word;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.chat-message.user {
+  align-self: flex-end;
+  background: #2563eb;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-message.bot {
+  align-self: flex-start;
+  background: #e5e7eb;
+  color: #111827;
+  border-bottom-left-radius: 4px;
+}
+
+/* Yuklanmoqda... xabari uchun */
+.chat-message.bot#bot-loading {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+/* Xabar yuborish formasi */
+#chatbot-form {
+  display: flex;
+  border-top: 1px solid #e2e8f0;
+  background: #f9fafb;
+}
+
+#chatbot-input {
+  flex: 1;
+  border: none;
+  padding: 9px 10px;
+  font-size: 0.86rem;
+  outline: none;
+  background: transparent;
+}
+
+#chatbot-input::placeholder {
+  color: #9ca3af;
+}
+
+#chatbot-form button {
+  border: none;
+  padding: 0 14px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 0.82rem;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 0 0 14px 0;
+}
+
+#chatbot-form button:hover {
+  background: #1d4ed8;
+}
+
+/* Mobil ekranlar */
+@media (max-width: 480px) {
+  #chatbot-window {
+    width: 92vw;
+    height: 60vh;
+  }
+}

@@ -1,0 +1,161 @@
+# =====================================================
+# requirements.txt - Railway production (slim, CPU-only)
+# Mahalliy CUDA uchun requirements-cuda.txt dan foydalaning
+# =====================================================
+
+# PyTorch CPU-only indexi (nvidia-*, triton, cudnn o'rnatilmaydi)
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- Web Framework ---
+Django==5.2.8
+djangorestframework==3.16.1
+asgiref==3.10.0
+sqlparse==0.5.3
+
+# --- Production Server ---
+gunicorn==23.0.0
+whitenoise==6.9.0
+
+# --- Database ---
+dj-database-url==2.3.0
+psycopg2-binary==2.9.10
+
+# --- Task Queue ---
+celery==5.5.3
+redis==5.2.1
+kombu==5.5.4
+amqp==5.3.1
+billiard==4.2.2
+vine==5.1.0
+click==8.3.0
+click-didyoumean==0.3.1
+click-plugins==1.1.1.2
+click-repl==0.3.0
+prompt_toolkit==3.0.52
+wcwidth==0.2.14
+
+# --- Env & HTTP ---
+python-dotenv==1.2.1
+requests==2.32.5
+urllib3==2.5.0
+certifi==2025.11.12
+httpx==0.28.1
+httpcore==1.0.9
+anyio==4.11.0
+sniffio==1.3.1
+h11==0.16.0
+idna==3.11
+charset-normalizer==3.4.4
+
+# --- PyTorch CPU ONLY (nvidia-*, triton, torchaudio YO'Q) ---
+torch==2.5.1+cpu
+timm==1.0.22
+einops==0.8.1
+safetensors==0.6.2
+
+# --- Medical Imaging ---
+nibabel==5.3.2
+pydicom==3.0.1
+simpleitk==2.5.2
+connected-components-3d==3.26.1
+
+# --- Scientific ---
+numpy==2.1.2
+scipy==1.15.3
+scikit-image==0.25.2
+scikit-learn==1.7.2
+pandas==2.3.3
+matplotlib==3.10.7
+contourpy==1.3.2
+cycler==0.12.1
+kiwisolver==1.4.9
+pyparsing==3.2.5
+python-dateutil==2.9.0.post0
+pytz==2025.2
+tzdata==2025.2
+six==1.17.0
+joblib==1.5.2
+threadpoolctl==3.6.0
+lazy_loader==0.4
+tifffile==2025.5.10
+imageio==2.37.2
+
+# --- Image Processing ---
+pillow==11.3.0
+opencv-python-headless==4.12.0.88
+
+# --- nnU-Net ---
+nnunetv2==2.6.2
+batchgenerators==0.25.1
+batchgeneratorsv2==0.3.0
+dynamic_network_architectures==0.4.2
+acvl_utils==0.2.5
+fft-conv-pytorch==1.2.0
+
+# --- Google Gemini ---
+google-genai==1.52.0
+google-generativeai==0.8.5
+google-ai-generativelanguage==0.6.15
+google-api-core==2.28.1
+google-api-python-client==2.187.0
+google-auth==2.43.0
+google-auth-httplib2==0.2.1
+googleapis-common-protos==1.72.0
+grpcio==1.76.0
+grpcio-status==1.71.2
+proto-plus==1.26.1
+protobuf==5.29.5
+huggingface_hub==1.1.2
+pyasn1==0.6.1
+pyasn1_modules==0.4.2
+rsa==4.9.1
+cachetools==6.2.2
+httplib2==0.31.0
+uritemplate==4.2.0
+
+# --- PDF Export ---
+weasyprint==66.0
+tinycss2==1.4.0
+tinyhtml5==2.0.0
+pydyf==0.11.0
+cssselect2==0.8.0
+pyphen==0.17.2
+webencodings==0.5.1
+brotli==1.2.0
+zopfli==0.4.0
+fonttools==4.60.1
+
+# --- QR Code ---
+qrcode==8.2
+
+# --- Utilities ---
+pyyaml==6.0.3
+packaging==25.0
+tqdm==4.67.1
+filelock==3.19.1
+fsspec==2025.9.0
+networkx==3.3
+sympy==1.13.1
+mpmath==1.3.0
+Jinja2==3.1.6
+MarkupSafe==2.1.5
+pydantic==2.12.5
+pydantic_core==2.41.5
+typing_extensions==4.15.0
+typing-inspection==0.4.2
+annotated-types==0.7.0
+async-timeout==5.0.1
+cffi==2.0.0
+pycparser==2.23
+msgpack==1.1.2
+platformdirs==4.5.0
+tenacity==9.1.2
+seaborn==0.13.2
+websockets==15.0.1
+future==1.0.0
+shellingham==1.5.4
+typer-slim==0.20.0
+ndindex==1.10.0
+numexpr==2.14.1
+py-cpuinfo==9.0.0
+importlib_resources==6.5.2

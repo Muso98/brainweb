@@ -1,0 +1,272 @@
+{# tumor/templates/tumor/report_v2.0.html #}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Study #{{ study.id }} · BrainWeb Advanced Report</title>
+  <style>
+    /* Page */
+    @page { size: A4; margin: 18mm; }
+
+    /* Body font: use DejaVu for PDF glyph coverage */
+    body {
+      font-family: "DejaVu Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #222;
+      font-size: 11pt;
+      line-height: 1.25;
+    }
+
+    /* Layout */
+    .container { width: 100%; }
+    .header { border-bottom: 2px solid #0d6efd; padding-bottom: 8px; margin-bottom: 12px; }
+    .left { float:left; }
+    .right { float:right; text-align:right; color:#555; font-size:9pt; }
+    .clearfix { clear: both; }
+    h1 { margin:0; font-size:18pt; }
+    h2 { margin:12px 0 6px 0; font-size:13pt; border-bottom:1px solid #e6e6e6; padding-bottom:4px; }
+    h3 { margin:10px 0 4px 0; font-size:11.5pt; }
+
+    /* Tables and text */
+    table.grid { width:100%; border-collapse:collapse; margin-top:6px; margin-bottom:6px; }
+    table.grid th { text-align:left; font-size:9pt; color:#666; width:28%; padding:4px; vertical-align:top; }
+    table.grid td { padding:4px; font-size:10pt; vertical-align:top; }
+    .muted { color:#777; font-size:9pt; }
+    .tag { display:inline-block; padding:3px 6px; border-radius:4px; background:#e7f1ff; color:#0d6efd; font-size:9pt; }
+    .status { display:inline-block; padding:3px 8px; border-radius:999px; color:#fff; font-size:9pt; }
+    .status-done{ background:#28a745 } .status-processing{ background:#0d6efd } .status-error{ background:#dc3545 } .status-pending{ background:#6c757d }
+    .section { margin-bottom:12px; }
+
+    /* Images */
+    .image-block { text-align:center; margin-top:6px; }
+    .image-block img { max-width:100%; max-height:260px; border:1px solid #ddd; border-radius:4px; }
+
+    /* Slice gallery: use grid for predictable pagination */
+    .slice-gallery {
+      margin-top:8px;
+      margin-bottom:8px;
+      /* Try to keep gallery together on one page where possible */
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .slice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px 12px;
+      align-items: start;
+      margin: 6px 0;
+      /* prevent splitting a row between pages */
+      page-break-inside: avoid;
+      break-inside: avoid;
+    }
+
+    .slice-item {
+      /* ensure the entire item is not split across pages */
+      page-break-inside: avoid;
+      break-inside: avoid;
+      -webkit-column-break-inside: avoid;
+      padding: 6px;
+      background: #fff;
+      text-align: center;
+      border: 1px solid #f0f0f0;
+      border-radius: 4px;
+    }
+
+    /* Restrict image height so items fit on page */
+    .slice-item img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      max-height: 200px; /* << adjust: 200-260px range is safe for A4 with margins */
+      object-fit: contain;
+    }
+
+    .image-caption { font-size:9pt; color:#666; margin-top:4px; }
+
+    /* 3D preview */
+    .preview3d { text-align: center; margin: 10px 0; page-break-inside: avoid; break-inside: avoid; }
+    .preview3d img { max-width: 320px; max-height: 240px; object-fit: contain; }
+
+    /* Utility: force new page before large sections if needed */
+    .page-break-before { page-break-before: always; break-before: page; }
+
+    /* Misc */
+    .code { font-family: monospace; font-size:9pt; background:#f8f9fa; padding:6px; border-radius:4px; border:1px solid #eee; white-space:pre-wrap; }
+    .two-col { display:flex; gap:12px; }
+    .col-70 { flex: 0 0 70%; }
+    .col-30 { flex: 0 0 30%; }
+    .small { font-size:9pt; color:#666; }
+    .footer { border-top:1px solid #e6e6e6; padding-top:8px; margin-top:12px; font-size:8.5pt; color:#777; }
+    .metric { font-weight:600; }
+    .pred-table { width:100%; border-collapse:collapse; margin-top:6px; }
+    .pred-table td { padding:6px; border:1px solid #eee; font-size:10pt; }
+    .warn { color:#b02a37; font-weight:600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="left">
+        <div class="small muted">BrainWeb · Tumor Segmentation Platform</div>
+        <h1>Advanced Imaging Report</h1>
+      </div>
+      <div class="right">
+        <div>Study ID: <strong>#{{ study.id }}</strong></div>
+        <div>Acquired: {{ study.created_at|date:"Y-m-d H:i" }}</div>
+        <div>Generated: {{ now|date:"Y-m-d H:i" }}</div>
+        <div>
+          Status:
+          {% if study.status == "done" %}
+            <span class="status status-done">DONE</span>
+          {% elif study.status == "processing" %}
+            <span class="status status-processing">PROCESSING</span>
+          {% elif study.status == "error" %}
+            <span class="status status-error">ERROR</span>
+          {% else %}
+            <span class="status status-pending">{{ study.status|upper }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="clearfix"></div>
+    </div>
+
+    <!-- Patient & Study -->
+    <div class="section">
+      <h2>Patient & Study</h2>
+      <table class="grid">
+        <tr><th>Patient</th><td>{{ study.patient.first_name }} {{ study.patient.last_name }}{% if study.patient.birth_date %} — {{ study.patient.birth_date|date:"Y-m-d" }}{% endif %}</td></tr>
+        <tr><th>Patient ID</th><td>{% if study.patient.identifier %}{{ study.patient.identifier }}{% else %}<span class="muted">Not provided</span>{% endif %}</td></tr>
+        <tr><th>Modality</th><td>{{ study.modality }}</td></tr>
+        <tr><th>Uploaded file</th><td class="small">{% if study.uploaded_file %}{{ study.uploaded_file.name }}{% else %}<span class="muted">–</span>{% endif %}</td></tr>
+        <tr><th>Description</th><td>{% if study.description %}{{ study.description }}{% else %}<span class="muted">No description</span>{% endif %}</td></tr>
+      </table>
+    </div>
+
+    <!-- Radiologist summary -->
+    <div class="section">
+      <h2>Radiologist summary</h2>
+      {% if radiologist_summary %}
+        <div class="code">{{ radiologist_summary|linebreaks }}</div>
+      {% else %}
+        <div class="muted">No summary provided. Please fill on the study page before finalizing the report.</div>
+      {% endif %}
+    </div>
+
+    <!-- AI quantitative results -->
+    <div class="section">
+      <h2>AI Quantitative Results</h2>
+      {% if ai_result %}
+        <table class="grid">
+          <tr><th>Tumor volume</th>
+              <td>{% if ai_result.tumor_volume_mm3 %}<span class="metric">{{ ai_result.tumor_volume_mm3|floatformat:1 }} mm³</span>{% else %}<span class="muted">Not available</span>{% endif %}</td></tr>
+          <tr><th>Max diameter</th>
+              <td>{% if ai_result.tumor_max_diameter_mm %}{{ ai_result.tumor_max_diameter_mm|floatformat:1 }} mm{% else %}<span class="muted">Not available</span>{% endif %}</td></tr>
+          <tr><th>3D bounding box (voxels)</th>
+              <td>{% if ai_result.bbox_x_min is not None %}({{ ai_result.bbox_x_min }}, {{ ai_result.bbox_y_min }}, {{ ai_result.bbox_z_min }}) → ({{ ai_result.bbox_x_max }}, {{ ai_result.bbox_y_max }}, {{ ai_result.bbox_z_max }}){% else %}<span class="muted">Not available</span>{% endif %}</td></tr>
+          <tr><th>Predicted tumor type</th>
+              <td>{% if ai_result.predicted_class %}<span class="tag">{{ ai_result.predicted_class }}</span>{% if ai_result.predicted_confidence %}<span class="small muted">confidence: {{ ai_result.predicted_confidence|floatformat:2 }}</span>{% endif %}{% else %}<span class="muted">Classifier not configured</span>{% endif %}</td></tr>
+        </table>
+      {% else %}
+        <div class="muted">No AI analysis available for this study.</div>
+      {% endif %}
+    </div>
+
+    <!-- Visual outputs -->
+    <div class="section">
+      <h2>Visual outputs</h2>
+      {% if overlay_url %}
+        <h3>Segmentation overlay</h3>
+        <div class="image-block"><img src="{{ overlay_url }}" alt="overlay"></div>
+        <div class="image-caption">Representative slice with segmentation overlay.</div>
+      {% endif %}
+      {% if grad_cam_url %}
+        <h3>Grad-CAM (classifier explanation)</h3>
+        <div class="image-block"><img src="{{ grad_cam_url }}" alt="gradcam"></div>
+        <div class="image-caption">Grad-CAM heatmap aggregated over classifier slices.</div>
+      {% endif %}
+      {% if uncertainty_map_url %}
+        <h3>Uncertainty map</h3>
+        <div class="image-block"><img src="{{ uncertainty_map_url }}" alt="uncertainty"></div>
+        <div class="image-caption">Uncertainty heatmap (boundary / voxel-wise uncertainty proxy).</div>
+      {% endif %}
+    </div>
+
+    <!-- Slice gallery -->
+    <div class="section slice-gallery">
+      <h2>Slice gallery (selected slices)</h2>
+      {% if slice_gallery %}
+        <div class="slice-grid">
+          {% for img_url in slice_gallery %}
+            <div class="slice-item">
+              <img src="{{ img_url }}" alt="slice {{ forloop.counter }}">
+              <div class="image-caption">Slice {{ forloop.counter }}</div>
+            </div>
+          {% endfor %}
+        </div>
+        <div class="small muted" style="margin-top:6px;">Slices chosen around tumor extent; red contour = segmentation mask.</div>
+      {% else %}
+        <div class="muted">Slice gallery not available.</div>
+      {% endif %}
+    </div>
+
+    <!-- 3D reconstruction + QR -->
+    <div class="section">
+      <h2>3D reconstruction & quick access</h2>
+      <div class="two-col">
+        <div class="col-70">
+          {% if preview3d %}
+            <div class="image-block preview3d"><img src="{{ preview3d }}" alt="3d preview"></div>
+            <div class="image-caption">Static 3D snapshot of tumor mesh (view interactive model on platform).</div>
+          {% else %}
+            <div class="muted">3D preview not available.</div>
+          {% endif %}
+        </div>
+        <div class="col-30" style="text-align:center;">
+          <h3>Open on platform</h3>
+          {% if qr_code_url %}
+            <div style="padding:8px; border:1px solid #eee; display:inline-block; background:#fff;">
+              <img src="{{ qr_code_url }}" alt="QR code" style="width:140px; height:140px;">
+            </div>
+            <div class="small muted" style="margin-top:6px;">Scan to open study viewer</div>
+          {% else %}
+            <div class="muted">QR unavailable</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Growth prediction -->
+    <div class="section">
+      <h2>Growth prediction & treatment simulation</h2>
+      {% if pred_vol_30_days or pred_vol_90_days or growth_rate_30_days %}
+        <table class="pred-table">
+          <tr><td>Current volume</td><td>{% if ai_result.tumor_volume_mm3 %}{{ ai_result.tumor_volume_mm3|floatformat:1 }} mm³{% else %}—{% endif %}</td></tr>
+          <tr><td>Predicted volume (30 days)</td><td>{% if pred_vol_30_days %}{{ pred_vol_30_days|floatformat:1 }} mm³{% else %}—{% endif %}</td></tr>
+          <tr><td>Predicted volume (90 days)</td><td>{% if pred_vol_90_days %}{{ pred_vol_90_days|floatformat:1 }} mm³{% else %}—{% endif %}</td></tr>
+          <tr><td>Avg. daily growth (30d)</td><td>{% if growth_rate_30_days %}{{ growth_rate_30_days|floatformat:2 }} mm³/day{% else %}—{% endif %}</td></tr>
+          <tr><td>Simulated post-treatment volume</td><td>{% if sim_vol_post_treatment %}{{ sim_vol_post_treatment|floatformat:1 }} mm³{% else %}—{% endif %}</td></tr>
+        </table>
+        <div class="small muted" style="margin-top:6px;">Note: Predictions are model outputs for decision support. Clinical decisions must rely on physician judgement.</div>
+      {% else %}
+        <div class="muted">No growth prediction available for this study.</div>
+      {% endif %}
+    </div>
+
+    <!-- Important notice -->
+    <div class="section">
+      <h2>Important notice</h2>
+      <p class="small muted">
+        This report is generated automatically by BrainWeb AI tools. Measurements and predictions are for research and decision-support only.
+        Final clinical interpretation must be performed by a qualified radiologist or physician. Check model version, inference metadata, and uncertainty maps before making clinical decisions.
+      </p>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      BrainWeb · Automated Tumor Segmentation & Quantification<br>
+      Generated for study #{{ study.id }} on {{ now|date:"Y-m-d H:i" }}.
+    </div>
+  </div>
+</body>
+</html>

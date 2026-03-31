@@ -1,0 +1,43 @@
+# Virtual environments
+venv/
+.venv/
+env/
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitattributes
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Local secrets
+.env
+.env.local
+
+# Local media (uploaded files - Railway uses a Volume instead)
+media/
+
+# Static files will be generated during build
+staticfiles/
+
+# Large ML model data (not needed in Docker image - mounted as Volume)
+data/nnUNet_raw/
+data/nnUNet_preprocessed/
+data/nnUNet_results/
+
+# Local SQLite (Railway uses PostgreSQL)
+db.sqlite3
+
+# Logs
+*.log
+
+# Node (if any)
+node_modules/

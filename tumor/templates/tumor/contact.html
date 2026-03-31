@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Contact · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <h1 class="mb-3">Contact</h1>
+  <p class="text-muted">Iltimos xabar qoldiring — biz tez orada bog'lanamiz.</p>
+
+  <form method="post" action="{% url 'tumor:contact' %}">
+    {% csrf_token %}
+    <div class="mb-2">
+      <label class="form-label">Ism</label>
+      <input type="text" name="name" class="form-control" required>
+    </div>
+    <div class="mb-2">
+      <label class="form-label">Email</label>
+      <input type="email" name="email" class="form-control" required>
+    </div>
+    <div class="mb-2">
+      <label class="form-label">Xabar</label>
+      <textarea name="message" class="form-control" rows="6" required></textarea>
+    </div>
+    <button class="btn btn-primary btn-sm" type="submit">Yuborish</button>
+  </form>
+</div>
+{% endblock %}
+HTML

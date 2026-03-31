@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+{% block title %}Terms of Service · BrainWeb{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <h1 class="fw-semibold mb-3">Terms of Service</h1>
+  <p class="text-muted small">
+    Ushbu hujjat BrainWeb platformasidan foydalanish shartlari va mas'uliyat chegaralarini belgilaydi.
+    Platformaga kirish orqali foydalanuvchi quyida keltirilgan barcha qoidalarga rozi bo‘ladi.
+  </p>
+
+  <hr class="my-4">
+
+  <!-- Section 1 -->
+  <h4 class="fw-bold mt-4">1. Xizmatning tavsifi</h4>
+  <p class="small text-muted">
+    BrainWeb — tibbiy tasvirlarda (MRI/CT) o‘smalarni aniqlash, segmentatsiya qilish va vizual tahlil qilishda yordam beruvchi
+    sun’iy intellekt platformasi. Xizmatlar klinik jarayonni qo‘llab-quvvatlash uchun mo‘ljallangan bo‘lib,
+    <strong>tibbiy tashxis yoki davolash bo‘yicha yakuniy qaror o‘rnini bosa olmaydi</strong>.
+  </p>
+
+  <!-- Section 2 -->
+  <h4 class="fw-bold mt-4">2. Foydalanuvchi majburiyatlari</h4>
+  <ul class="small text-muted">
+    <li>Foydalanuvchi platformaga yuklaydigan barcha DICOM fayllarining qonuniy jihatdan ishlatilishiga javobgar.</li>
+    <li>Platformadan faqat tadqiqot, tahlil yoki klinik yordam maqsadida foydalanish mumkin.</li>
+    <li>Shaxsiy ma’lumotlarni himoya qilish bo‘yicha amaldagi qonunlarga rioya qilish foydalanuvchining zimmasida.</li>
+  </ul>
+
+  <!-- Section 3 -->
+  <h4 class="fw-bold mt-4">3. Ma'lumotlarni qayta ishlash</h4>
+  <p class="small text-muted">
+    BrainWeb barcha yuklangan DICOM fayllarini <strong>de-identification</strong> jarayonidan o‘tkazadi, ya’ni
+    bemor shaxsiga oid ma’lumotlar avtomatik yashiriladi. Ma’lumotlar faqat tahlil jarayoni uchun saqlanadi va
+    keraksiz bo‘lganda tizimdan o‘chiriladi.
+  </p>
+
+  <!-- Section 4 -->
+  <h4 class="fw-bold mt-4">4. Mas'uliyatni cheklash</h4>
+  <p class="small text-muted">
+    BrainWeb AI modeli klinik qaror qabul qilish jarayonini yengillashtirish uchun ishlab chiqilgan bo‘lsa-da, AI natijalari
+    <strong>shifokor xulosasini to‘liq almashtira olmaydi</strong>. Platforma noto‘g‘ri yoki to‘liq bo‘lmagan tibbiy ma’lumotlardan
+    kelib chiqadigan zararlar uchun javobgar emas.
+  </p>
+
+  <!-- Section 5 -->
+  <h4 class="fw-bold mt-4">5. Xizmat uzilishi va texnik cheklovlar</h4>
+  <p class="small text-muted">
+    Server texnik xizmat ko‘rsatish, yangilanishlar yoki tarmoq uzilishlari sababli vaqtincha ishlamay qolishi mumkin.
+    Platforma xizmat uzilishlari uchun javobgar emas, biroq uzilishlar minimal bo‘lishi uchun barcha choralar ko‘riladi.
+  </p>
+
+  <!-- Section 6 -->
+  <h4 class="fw-bold mt-4">6. Intellektual mulk</h4>
+  <p class="small text-muted">
+    BrainWeb platformasi, uning AI moduli, dizayn, logotip, 3D vizualizatsiya tizimi va barcha kodlar
+    platforma egasiga tegishli bo‘lib, mualliflik huquqi bilan himoyalangan. Ruxsatsiz ko‘chirish yoki tarqatish taqiqlanadi.
+  </p>
+
+  <!-- Section 7 -->
+  <h4 class="fw-bold mt-4">7. Hisobotlar (PDF) va eksportlar</h4>
+  <p class="small text-muted">
+    Platforma avtomatik ravishda diagnostika hisobotlari va 3D vizualizatsiya eksportlarini yaratadi.
+    Ushbu hujjatlar faqat maslahat xarakteriga ega va klinik hujjat sifatida qo‘llanilishi mumkin emas.
+  </p>
+
+  <!-- Section 8 -->
+  <h4 class="fw-bold mt-4">8. Maxfiylik siyosati</h4>
+  <p class="small text-muted">
+    Maxfiylik siyosati alohida hujjatda berilgan. Platformadan foydalanish bilan foydalanuvchi
+    <a href="{% url 'tumor:privacy' %}">Privacy Policy</a> bilan ham tanishgan bo‘lishi shart.
+  </p>
+
+  <!-- Section 9 -->
+  <h4 class="fw-bold mt-4">9. O‘zgarishlar kiritish</h4>
+  <p class="small text-muted">
+    BrainWeb istalgan vaqtda xizmat shartlariga o‘zgartirish kiritishi mumkin.
+    Yangilangan versiya ushbu sahifada e’lon qilinadi va darhol kuchga kiradi.
+  </p>
+
+  <!-- Section 10 -->
+  <h4 class="fw-bold mt-4">10. Aloqa ma'lumotlari</h4>
+  <p class="small text-muted">
+    Xizmat shartlari bo‘yicha savollar uchun biz bilan bog‘laning:
+    <br>
+    <strong>Email:</strong> <a href="mailto:support@brainweb.ai">support@brainweb.ai</a>
+  </p>
+
+</div>
+{% endblock %}
