@@ -217,6 +217,8 @@ CSRF_TRUSTED_ORIGINS = [
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+
 # settings.py (development)
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 DEFAULT_FROM_EMAIL = "BrainWeb <no-reply@brainweb.local>"

@@ -232,53 +232,54 @@ def study_list(request):
                 study.nifti_file.name = os.path.relpath(preprocessed_nifti, settings.MEDIA_ROOT)
                 study.save(update_fields=["nifti_file"])
 
-                # Segmentation
-                mask_abs = ai.run_segmentation(preprocessed_nifti)
-                mask_rel = os.path.relpath(mask_abs, settings.MEDIA_ROOT)
+                # Groq Vision AI tahlili
+                from .ai_groq import analyze_study, save_slices_png
+                groq_result = analyze_study(preprocessed_nifti, modality=form.cleaned_data.get("modality", "MRI"))
+                logger.info("Groq tahlili: %s", groq_result)
 
-                # Metrics & overlay
-                metrics = ai.compute_bbox_and_metrics(mask_abs)
-                overlay_rel = ai.generate_overlay_png(preprocessed_nifti, mask_abs)
+                # Volume taxmini mm3 ga o'tkazish (Groq cm3 beradi)
+                vol_mm3 = None
+                if groq_result.get("tumor_volume_estimate_cm3") is not None:
+                    try:
+                        vol_mm3 = float(groq_result["tumor_volume_estimate_cm3"]) * 1000
+                    except Exception:
+                        pass
 
-                # Classification (optional)
-                predicted_class, predicted_conf = "", None
-                try:
-                    predicted_class, predicted_conf = ai.classify_tumor(preprocessed_nifti)
-                except Exception:
-                    logger.debug("Tumor classifier not available or failed.", exc_info=True)
+                confidence = groq_result.get("confidence")
+                predicted_class = groq_result.get("predicted_class", "") or ""
+                predicted_conf = float(confidence) if confidence is not None else None
 
-                # Save AIResult
+                # AIResult saqlash
                 ai_result = AIResult.objects.create(
                     study=study,
-                    tumor_volume_mm3=metrics.get("tumor_volume_mm3"),
-                    tumor_max_diameter_mm=metrics.get("tumor_max_diameter_mm"),
-                    bbox_x_min=metrics["bbox"].get("x_min"),
-                    bbox_y_min=metrics["bbox"].get("y_min"),
-                    bbox_z_min=metrics["bbox"].get("z_min"),
-                    bbox_x_max=metrics["bbox"].get("x_max"),
-                    bbox_y_max=metrics["bbox"].get("y_max"),
-                    bbox_z_max=metrics["bbox"].get("z_max"),
-                    predicted_class=predicted_class or "",
+                    tumor_volume_mm3=vol_mm3,
+                    tumor_max_diameter_mm=None,
+                    predicted_class=predicted_class,
                     predicted_confidence=predicted_conf,
+                    volumes_by_group={
+                        "groq_analysis": {
+                            "tumor_detected": groq_result.get("tumor_detected"),
+                            "severity": groq_result.get("severity"),
+                            "location": groq_result.get("location"),
+                            "findings": groq_result.get("findings"),
+                            "recommendation": groq_result.get("recommendation"),
+                            "model": groq_result.get("groq_model"),
+                        }
+                    },
                 )
 
-                ai_result.mask_nifti.name = mask_rel
-                if overlay_rel:
-                    ai_result.bbox_png.name = overlay_rel
-
-                # Mesh generation (best-effort)
-                try:
-                    mesh_abs = ai.generate_tumor_mesh_json(mask_abs, study.id)
-                    ai_result.tumor_mesh_json.name = os.path.relpath(mesh_abs, settings.MEDIA_ROOT)
-                except Exception as e:
-                    logger.exception("Mesh generation failed: %s", e)
+                # Kesimlar PNG sifatida saqlash (preview uchun)
+                slices_path = save_slices_png(preprocessed_nifti, study.id)
+                if slices_path:
+                    rel = os.path.relpath(slices_path, settings.MEDIA_ROOT)
+                    ai_result.bbox_png.name = rel
 
                 ai_result.save()
 
                 study.status = "done"
                 study.save(update_fields=["status"])
 
-                messages.success(request, "Study uploaded and processed successfully.")
+                messages.success(request, "MRI/CT tahlili muvaffaqiyatli bajarildi!")
                 return redirect("tumor:study_detail", pk=study.pk)
 
             except Exception as e:

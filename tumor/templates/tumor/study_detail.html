@@ -155,87 +155,123 @@
 
         {% elif ai_result and ai_result.bbox_png %}
           <div class="text-center">
-            <img src="{{ ai_result.bbox_png.url }}" class="img-fluid rounded border" style="max-height:420px;">
+            <img src="{{ ai_result.bbox_png.url }}" class="img-fluid rounded border" style="max-height:260px; width:100%;">
+            <div class="small text-muted mt-1">Axial · Coronal · Sagittal (Groq tahlili uchun kesimlar)</div>
           </div>
         {% else %}
-          <p class="text-muted mb-0"><em>No AI result yet.</em></p>
+          <p class="text-muted mb-0"><em>Hali natija yo'q.</em></p>
         {% endif %}
       </div>
     </div>
 
     {# 3. ANALYSIS RESULTS #}
     {% if ai_result %}
-      <div class="card">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Analysis Metrics</h5>
-          <div class="row small">
-            <div class="col-6 mb-3">
-              <div class="text-muted">Tumor Volume</div>
-              {% if ai_result.tumor_volume_mm3 is not None %}
-                <div class="fw-bold fs-5">{{ ai_result.tumor_volume_mm3|floatformat:1 }} mm³</div>
-                <span class="text-muted">({{ volume_cm3|floatformat:2 }} cm³)</span>
-              {% else %}
-                <div class="fw-bold fs-5 text-muted">-</div>
-              {% endif %}
+
+      {# Groq tahlili natijasi #}
+      {% with g=ai_result.volumes_by_group.groq_analysis %}
+      {% if g %}
+        {% if g.tumor_detected %}
+          <div class="alert alert-danger border-0 shadow-sm mb-3 d-flex align-items-center gap-3">
+            <span style="font-size:2rem;">🧠</span>
+            <div>
+              <strong>O'sima aniqlandi</strong>
+              <div class="small mt-1">
+                {% if g.severity == "high" %}Jiddiy daraja{% elif g.severity == "moderate" %}O'rtacha daraja{% elif g.severity == "low" %}Past daraja{% endif %}
+                {% if ai_result.predicted_class %} · <span class="badge bg-danger">{{ ai_result.predicted_class }}</span>{% endif %}
+                {% if ai_result.predicted_confidence %} · Ishonch: {{ ai_result.predicted_confidence|floatformat:0 }}%{% endif %}
+              </div>
+            </div>
+          </div>
+        {% else %}
+          <div class="alert alert-success border-0 shadow-sm mb-3 d-flex align-items-center gap-3">
+            <span style="font-size:2rem;">✅</span>
+            <div>
+              <strong>O'sima aniqlanmadi</strong>
+              <div class="small mt-1 text-muted">AI tahlili normal ko'rsatdi</div>
+            </div>
+          </div>
+        {% endif %}
+
+        <div class="card mb-3">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h5 class="card-title mb-0">AI Tahlil Natijasi</h5>
+              <span class="badge bg-light text-muted border small">Groq Llama 4 Vision</span>
             </div>
 
-            <div class="col-6 mb-3">
-              <div class="text-muted">Max Diameter</div>
-              {% if ai_result.tumor_max_diameter_mm is not None %}
-                <div class="fw-bold fs-5">{{ ai_result.tumor_max_diameter_mm|floatformat:1 }} mm</div>
-                {% if max_diam_cm %}
-                  <span class="text-muted">({{ max_diam_cm|floatformat:2 }} cm)</span>
+            <div class="row g-3 small mb-3">
+              <div class="col-6 col-md-3">
+                <div class="text-muted mb-1">Holat</div>
+                {% if g.tumor_detected %}
+                  <span class="badge bg-danger fs-6">O'sima bor</span>
+                {% else %}
+                  <span class="badge bg-success fs-6">Normal</span>
                 {% endif %}
-              {% else %}
-                <div class="fw-bold fs-5 text-muted">-</div>
-              {% endif %}
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted mb-1">Turi</div>
+                <div class="fw-bold">{{ ai_result.predicted_class|default:"-" }}</div>
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted mb-1">Hajm (taxmin)</div>
+                {% if ai_result.tumor_volume_mm3 %}
+                  <div class="fw-bold">{{ volume_cm3|floatformat:1 }} cm³</div>
+                {% else %}
+                  <div class="text-muted">-</div>
+                {% endif %}
+              </div>
+              <div class="col-6 col-md-3">
+                <div class="text-muted mb-1">Joylashuv</div>
+                <div class="fw-bold">{{ g.location|default:"-" }}</div>
+              </div>
             </div>
 
-            {# Optional: show volumes by groups if view passed them as context #}
-            {% if volumes_by_group %}
-              <div class="col-12 border-top pt-2 mt-2">
-                <div class="text-muted mb-2">Volumes by label group</div>
-                <div class="small">
-                  <table class="table table-sm mb-0">
-                    <thead>
-                      <tr>
-                        <th>Group</th>
-                        <th class="text-end">Voxels</th>
-                        <th class="text-end">mm³</th>
-                        <th class="text-end">cm³</th>
-                        <th class="text-end">Approx. diam (mm)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for name, info in volumes_by_group.items %}
-                        <tr>
-                          <td>{{ name|capfirst|replace:"_, " }}</td>
-                          <td class="text-end">{{ info.voxels }}</td>
-                          <td class="text-end">{{ info.volume_mm3|floatformat:1 }}</td>
-                          <td class="text-end">{{ info.volume_cm3|floatformat:2 }}</td>
-                          <td class="text-end">
-                            {% if info.approx_max_diameter_mm %}{{ info.approx_max_diameter_mm|floatformat:1 }}{% else %}-{% endif %}
-                          </td>
-                        </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
+            {% if g.findings %}
+              <div class="mb-3">
+                <div class="text-muted small mb-1">Radiologik topilmalar</div>
+                <div class="p-3 bg-light rounded small">{{ g.findings }}</div>
               </div>
             {% endif %}
 
-            <div class="col-12 border-top pt-2 mt-2">
-               <div class="text-muted mb-1">Classification</div>
-               {% if ai_result.predicted_class %}
-                 <span class="badge bg-info text-dark fs-6">{{ ai_result.predicted_class }}</span>
-                 <span class="text-muted ms-2">Conf: {{ ai_result.predicted_confidence|default_if_none:"-"|floatformat:2 }}</span>
-               {% else %}
-                 <span class="text-muted">-</span>
-               {% endif %}
+            {% if g.recommendation %}
+              <div>
+                <div class="text-muted small mb-1">Tavsiya</div>
+                <div class="p-3 border border-primary rounded small text-primary">{{ g.recommendation }}</div>
+              </div>
+            {% endif %}
+
+            {% if g.model %}
+              <div class="mt-3 text-end">
+                <span class="text-muted" style="font-size:0.7rem;">Tahlil: {{ g.model }}</span>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      {% endif %}
+      {% endwith %}
+
+      {# Oddiy metrikalar #}
+      {% if ai_result.tumor_volume_mm3 or ai_result.tumor_max_diameter_mm %}
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">O'lchovlar</h5>
+          <div class="row small">
+            <div class="col-6">
+              <div class="text-muted">Hajm (taxmin)</div>
+              <div class="fw-bold fs-5">{{ volume_cm3|floatformat:2 }} cm³</div>
+              <span class="text-muted">{{ ai_result.tumor_volume_mm3|floatformat:0 }} mm³</span>
             </div>
+            {% if ai_result.predicted_confidence %}
+            <div class="col-6">
+              <div class="text-muted">Ishonch darajasi</div>
+              <div class="fw-bold fs-5">{{ ai_result.predicted_confidence|floatformat:0 }}%</div>
+            </div>
+            {% endif %}
           </div>
         </div>
       </div>
+      {% endif %}
+
     {% endif %}
 
   </div>

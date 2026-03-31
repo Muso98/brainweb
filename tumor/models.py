@@ -88,8 +88,8 @@ class AIResult(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
-    # 3D mask (nii.gz)
-    mask_nifti = models.FileField(upload_to="results/masks/")
+    # 3D mask (nii.gz) - nullable when using Groq AI (no nnUNet)
+    mask_nifti = models.FileField(upload_to="results/masks/", null=True, blank=True)
 
     # BBOX overlay image (png)
     bbox_png = models.ImageField(
