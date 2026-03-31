@@ -118,15 +118,17 @@ WSGI_APPLICATION = 'brainweb.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-# Railway DATABASE_URL o'zgaruvchisi bo'lsa PostgreSQL, bo'lmasa SQLite
+# DATABASE_URL bo'lsa PostgreSQL, bo'lmasa SQLite
 _db_url = os.environ.get('DATABASE_URL', '')
 if _db_url:
     DATABASES = {'default': dj_database_url.config(default=_db_url, conn_max_age=600)}
 else:
+    # Render/Railway da yozish mumkin bo'lgan path ishlatamiz
+    _sqlite_path = Path(os.environ.get('RENDER_SQLITE_PATH', str(BASE_DIR / 'db.sqlite3')))
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
+            'NAME': _sqlite_path,
         }
     }
 
