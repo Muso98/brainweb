@@ -226,12 +226,6 @@ def study_list(request):
                     status="processing",
                 )
 
-                # Session orqali study ID ni saqlash
-                ids = request.session.get("study_ids", [])
-                if study.pk not in ids:
-                    ids.append(study.pk)
-                request.session["study_ids"] = ids
-
                 # Preprocess -> nifti
                 uploaded_abs = study.uploaded_file.path
                 preprocessed_nifti = ai.preprocess_to_nifti(uploaded_abs)
@@ -290,10 +284,27 @@ def study_list(request):
             except Exception as e:
                 logger.exception("Study processing failed: %s", e)
                 if study is not None:
-                    study.status = "error"
-                    study.error_message = str(e)
-                    study.save(update_fields=["status", "error_message"])
-                messages.error(request, f"Error while processing study: {e}")
+                    try:
+                        study.status = "error"
+                        study.error_message = str(e)[:2000]
+                        study.save(update_fields=["status", "error_message"])
+                        # session ga qo'shish (muvaffaqiyatli saqlangan study uchun)
+                        try:
+                            ids = request.session.get("study_ids", [])
+                            if study.pk not in ids:
+                                ids.append(study.pk)
+                            request.session["study_ids"] = ids
+                        except Exception:
+                            pass
+                        messages.warning(
+                            request,
+                            f"Fayl yuklandi, lekin AI tahlili amalga oshmadi: {e}. "
+                            "Study saqlanib qoldi."
+                        )
+                        return redirect("tumor:study_detail", pk=study.pk)
+                    except Exception as save_err:
+                        logger.error("study.save() failed: %s", save_err)
+                messages.error(request, f"Xato yuz berdi: {e}")
         else:
             messages.error(request, "Upload form is invalid. Check required fields.")
 

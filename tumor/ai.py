@@ -124,8 +124,19 @@ def preprocess_to_nifti(uploaded_path: str) -> str:
 # Segmentation (nnU-Net wrapper)
 # -----------------------
 def run_segmentation(nifti_path: str) -> str:
-    import torch
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    # nnUNetv2_predict mavjudligini AVVAL tekshiramiz (torch yuklamasdan oldin)
+    from shutil import which
+    if not which("nnUNetv2_predict"):
+        raise RuntimeError(
+            "AI segmentation modeli bu serverda mavjud emas. "
+            "nnUNetv2_predict dasturi topilmadi. "
+            "Model fayllarini serverga yuklab, nnU-Net ni sozlash kerak."
+        )
+    try:
+        import torch
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+    except Exception:
+        device = "cpu"
     raw_mask_path = run_nnunet_on_nifti(nifti_path, device=device)
 
     masks_dir = _ensure_media_subdir("results/masks")
