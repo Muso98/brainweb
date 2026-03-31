@@ -1,79 +1,79 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Dashboard · BrainWeb{% endblock %}
+{% block title %}Boshqaruv paneli · BrainWeb{% endblock %}
 
 {% block content %}
 
-<!-- Top hero / header -->
 <div class="card border-0 shadow-sm mb-4"
      style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 50%, #0dcaf0 100%); color: #fff;">
   <div class="card-body p-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
       <div>
-        <h1 class="h3 mb-1">Dashboard</h1>
+        <h1 class="h3 mb-1">🧠 Boshqaruv paneli</h1>
         <p class="mb-0" style="opacity: 0.85;">
-          Overview of your brain tumor studies and AI analysis activity.
+          Miya o'smasi tekshiruvlari va AI tahlil faoliyatining umumiy ko'rinishi.
         </p>
       </div>
-
       <div class="d-flex flex-column align-items-end">
         <a href="{% url 'tumor:study_list' %}" class="btn btn-light btn-sm mb-2">
-          + New study
+          + Yangi tekshiruv
         </a>
+        {% if request.user.is_authenticated %}
         <span class="small" style="opacity: 0.85;">
-          Logged in as <strong>{{ request.user.username }}</strong>
+          Foydalanuvchi: <strong>{{ request.user.username }}</strong>
         </span>
+        {% endif %}
       </div>
     </div>
   </div>
 </div>
 
-<!-- Top stats -->
+<!-- Statistika kartalari -->
 <div class="row g-3 mb-4">
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card card-soft h-100">
       <div class="card-body">
-        <div class="text-muted small mb-1">Total studies</div>
+        <div class="text-muted small mb-1">Jami tekshiruvlar</div>
         <div class="d-flex align-items-end justify-content-between">
           <div class="h3 mb-0">{{ total_studies }}</div>
-          <span class="badge bg-light text-muted border small">All cases</span>
+          <span class="badge bg-light text-muted border small">Hammasi</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card card-soft h-100">
       <div class="card-body">
-        <div class="text-muted small mb-1">Completed</div>
+        <div class="text-muted small mb-1">Tugallangan</div>
         <div class="d-flex align-items-end justify-content-between">
           <div class="h3 mb-0 text-success">{{ completed_studies }}</div>
-          <span class="badge bg-success-subtle text-success border small">Done</span>
+          <span class="badge bg-success-subtle text-success border small">Tayyor</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card card-soft h-100">
       <div class="card-body">
-        <div class="text-muted small mb-1">Processing</div>
+        <div class="text-muted small mb-1">Jarayonda</div>
         <div class="d-flex align-items-end justify-content-between">
           <div class="h3 mb-0 text-primary">{{ processing_studies }}</div>
-          <span class="badge bg-primary-subtle text-primary border small">In queue</span>
+          <span class="badge bg-primary-subtle text-primary border small">Navbatda</span>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="col-md-3">
+  <div class="col-6 col-md-3">
     <div class="card card-soft h-100">
       <div class="card-body">
-        <div class="text-muted small mb-1">Errors</div>
+        <div class="text-muted small mb-1">Xatoliklar</div>
         <div class="d-flex align-items-end justify-content-between">
           <div class="h3 mb-0 text-danger">{{ error_studies }}</div>
-          <span class="badge bg-danger-subtle text-danger border small">Check logs</span>
+          <span class="badge bg-danger-subtle text-danger border small">Tekshiring</span>
         </div>
       </div>
     </div>
@@ -81,19 +81,17 @@
 </div>
 
 <div class="row g-3 mb-4">
-  <!-- Line chart: studies per day -->
+  <!-- Chiziqli grafik -->
   <div class="col-lg-7">
     <div class="card card-soft h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="card-title mb-0">Studies in last 7 days</h5>
-          <span class="text-muted small">Daily count</span>
+          <h5 class="card-title mb-0">So'nggi 7 kunlik tekshiruvlar</h5>
+          <span class="text-muted small">Kunlik soni</span>
         </div>
         <p class="text-muted small mb-3">
-          Activity trend of uploaded MRI/CT studies over the last week.
+          O'tgan hafta davomida yuklangan MRI/CT tekshiruvlari faoliyati.
         </p>
-
-        <!-- Max balandlikni ota div boshqaradi -->
         <div style="position: relative; height: 230px;">
           <canvas id="studiesPerDayChart"></canvas>
         </div>
@@ -101,35 +99,34 @@
     </div>
   </div>
 
-  <!-- Doughnut chart: tumor classes -->
+  <!-- Donut grafik -->
   <div class="col-lg-5">
     <div class="card card-soft h-100">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="card-title mb-0">Tumor types</h5>
+          <h5 class="card-title mb-0">O'sima turlari</h5>
           <span class="text-muted small">
-            {% if class_labels %}Based on AI classification{% else %}No data yet{% endif %}
+            {% if class_labels %}AI tasniflash asosida{% else %}Ma'lumot yo'q{% endif %}
           </span>
         </div>
 
         {% if class_labels %}
           <p class="text-muted small mb-3">
-            Distribution of predicted tumor types across your processed studies.
+            Qayta ishlangan tekshiruvlardagi bashorat qilingan o'sima turlari taqsimoti.
           </p>
-
           <div style="position: relative; height: 230px;">
             <canvas id="tumorTypesChart"></canvas>
           </div>
-
           {% if avg_volume %}
             <p class="mt-3 mb-0 text-muted small">
-              Avg tumor volume: <strong>{{ avg_volume|floatformat:1 }} mm³</strong>
+              O'rtacha o'sima hajmi: <strong>{{ avg_volume|floatformat:1 }} mm³</strong>
             </p>
           {% endif %}
         {% else %}
-          <div class="mt-4 text-muted small">
-            No completed AI classifications yet. Once you upload and process MRI/CT cases,
-            their predicted tumor types will appear here.
+          <div class="mt-4 text-center text-muted small">
+            <div style="font-size: 2.5rem;">📊</div>
+            <p class="mt-2">Hali AI tasnifi yo'q.</p>
+            <p class="mb-0">MRI/CT yuklangandan so'ng, o'sima turlari bu yerda ko'rsatiladi.</p>
           </div>
         {% endif %}
       </div>
@@ -137,66 +134,63 @@
   </div>
 </div>
 
-<!-- Recent studies table -->
+<!-- So'nggi tekshiruvlar jadvali -->
 <div class="card card-soft">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-2">
-      <h5 class="card-title mb-0">Recent studies</h5>
-      <a href="{% url 'tumor:study_list' %}" class="small">View all</a>
+      <h5 class="card-title mb-0">So'nggi tekshiruvlar</h5>
+      <a href="{% url 'tumor:study_list' %}" class="small">Barchasini ko'rish →</a>
     </div>
     <p class="text-muted small mb-3">
-      Latest uploaded cases with their current processing status.
+      Eng so'nggi yuklangan tekshiruvlar va ularning joriy holati.
     </p>
 
     <div class="table-responsive">
       <table class="table table-sm align-middle mb-0">
         <thead class="table-light">
           <tr>
-            <th>ID</th>
-            <th>Patient</th>
-            <th>Modality</th>
-            <th>Status</th>
-            <th>Created</th>
+            <th>#</th>
+            <th>Bemor</th>
+            <th>Turi</th>
+            <th>Holat</th>
+            <th>Sana</th>
             <th></th>
           </tr>
         </thead>
         <tbody>
           {% for s in recent_studies %}
             <tr>
-              <td class="text-muted small">#{{ s.id }}</td>
+              <td class="text-muted small">{{ s.id }}</td>
               <td>{{ s.patient }}</td>
               <td>
-                <span class="badge bg-light text-dark border small">
-                  {{ s.modality }}
-                </span>
+                <span class="badge bg-light text-dark border small">{{ s.modality }}</span>
               </td>
               <td>
                 {% if s.status == "done" %}
-                  <span class="badge bg-success-subtle text-success border small">Done</span>
+                  <span class="badge bg-success-subtle text-success border small">✓ Tayyor</span>
                 {% elif s.status == "processing" or s.status == "pending" %}
-                  <span class="badge bg-primary-subtle text-primary border small">Processing</span>
+                  <span class="badge bg-primary-subtle text-primary border small">⟳ Jarayonda</span>
                 {% elif s.status == "error" %}
-                  <span class="badge bg-danger-subtle text-danger border small">Error</span>
+                  <span class="badge bg-danger-subtle text-danger border small">✕ Xatolik</span>
                 {% else %}
-                  <span class="badge bg-secondary-subtle text-secondary border small">
-                    {{ s.status|title }}
-                  </span>
+                  <span class="badge bg-secondary-subtle text-secondary border small">{{ s.status }}</span>
                 {% endif %}
               </td>
-              <td class="text-muted small">
-                {{ s.created_at|date:"Y-m-d H:i" }}
-              </td>
+              <td class="text-muted small">{{ s.created_at|date:"d.m.Y H:i" }}</td>
               <td class="text-end">
-                <a href="{% url 'tumor:study_detail' s.id %}"
-                   class="btn btn-outline-secondary btn-sm">
-                  View
+                <a href="{% url 'tumor:study_detail' s.id %}" class="btn btn-outline-secondary btn-sm">
+                  Ko'rish
                 </a>
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" class="text-muted small">
-                <em>No studies yet. Upload your first MRI/CT from the Studies page.</em>
+              <td colspan="6" class="text-center text-muted small py-4">
+                <div style="font-size:2rem;">📂</div>
+                <p class="mt-2 mb-1">Hali tekshiruv yo'q.</p>
+                <a href="{% url 'tumor:study_list' %}" class="btn btn-primary btn-sm mt-1">
+                  Birinchi tekshiruvni yuklash
+                </a>
               </td>
             </tr>
           {% endfor %}
@@ -206,89 +200,51 @@
   </div>
 </div>
 
-<!-- === Charts data & scripts === -->
-
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
 <script>
-  // Backenddan kelgan ma'lumotlar
   const studiesPerDayLabels = {{ daily_labels|safe }};
   const studiesPerDayCounts = {{ daily_counts|safe }};
   const tumorTypeLabels = {{ class_labels|safe }};
   const tumorTypeCounts = {{ class_counts|safe }};
 
-  // Line chart – studies per day
   (function() {
-    const canvasLine = document.getElementById('studiesPerDayChart');
-    if (!canvasLine) return;
-
-    const ctxLine = canvasLine.getContext('2d');
-
-    new Chart(ctxLine, {
+    const canvas = document.getElementById('studiesPerDayChart');
+    if (!canvas) return;
+    new Chart(canvas.getContext('2d'), {
       type: 'line',
       data: {
         labels: studiesPerDayLabels,
         datasets: [{
-          label: 'Studies',
+          label: 'Tekshiruvlar',
           data: studiesPerDayCounts,
           tension: 0.3,
           fill: true,
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,   // balandlikni ota div boshqaradi
-        scales: {
-          y: {
-            beginAtZero: true,
-            ticks: {
-              precision: 0
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false
-          }
-        }
-      }
-    });
-  })();
-
-  // Doughnut chart – tumor classes
-  (function() {
-    if (!tumorTypeLabels || tumorTypeLabels.length === 0) return;
-
-    const canvasPie = document.getElementById('tumorTypesChart');
-    if (!canvasPie) return;
-
-    const ctxPie = canvasPie.getContext('2d');
-
-    new Chart(ctxPie, {
-      type: 'doughnut',
-      data: {
-        labels: tumorTypeLabels,
-        datasets: [{
-          data: tumorTypeCounts
+          borderWidth: 2,
+          borderColor: '#0d6efd',
+          backgroundColor: 'rgba(13,110,253,0.1)',
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        scales: { y: { beginAtZero: true, ticks: { precision: 0 } } },
+        plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }
+      }
+    });
+  })();
+
+  (function() {
+    if (!tumorTypeLabels || tumorTypeLabels.length === 0) return;
+    const canvas = document.getElementById('tumorTypesChart');
+    if (!canvas) return;
+    new Chart(canvas.getContext('2d'), {
+      type: 'doughnut',
+      data: { labels: tumorTypeLabels, datasets: [{ data: tumorTypeCounts }] },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
         cutout: '55%',
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              boxWidth: 12
-            }
-          }
-        }
+        plugins: { legend: { position: 'bottom', labels: { boxWidth: 12 } } }
       }
     });
   })();

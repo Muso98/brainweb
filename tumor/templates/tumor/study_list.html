@@ -1,30 +1,28 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Studies · BrainWeb{% endblock %}
+{% block title %}Tekshiruvlar · BrainWeb{% endblock %}
 
 {% block content %}
 
-<!-- Top hero / header -->
 <div class="card border-0 shadow-sm mb-4"
      style="background: linear-gradient(135deg, #0d6efd 0%, #6610f2 50%, #0dcaf0 100%); color: #fff;">
   <div class="card-body p-4">
     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
       <div>
-        <h1 class="h3 mb-1">Studies</h1>
+        <h1 class="h3 mb-1">Tekshiruvlar</h1>
         <p class="mb-0" style="opacity: 0.85;">
-          Manage your brain MRI/CT cases, run AI segmentation and review results.
+          Miya MRI/CT tekshiruvlarini boshqaring, AI segmentatsiyasini ishga tushiring va natijalarni ko'ring.
         </p>
       </div>
-
       <div class="d-flex flex-wrap align-items-center gap-3">
         <div class="text-end">
-          <div class="small" style="opacity: 0.75;">Total studies</div>
+          <div class="small" style="opacity: 0.75;">Jami tekshiruvlar</div>
           <div class="h4 mb-0">{{ studies|length }}</div>
         </div>
         <div class="vr d-none d-md-block" style="opacity: 0.4;"></div>
         <a href="{% url 'tumor:dashboard' %}" class="btn btn-outline-light btn-sm">
-          ← Back to dashboard
+          ← Boshqaruv paneliga
         </a>
       </div>
     </div>
@@ -33,132 +31,105 @@
 
 <div class="row g-4">
 
-  <!-- LEFT: New Study -->
+  <!-- CHAP: Yangi tekshiruv formasi -->
   <div class="col-xl-5">
     <div class="card border-0 shadow-sm">
       <div class="card-body p-4">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
           <div>
-            <h2 class="h5 mb-1">New study</h2>
+            <h2 class="h5 mb-1">Yangi tekshiruv</h2>
             <p class="text-muted small mb-0">
-              Fill patient details and upload MRI/CT volume. AI will process it automatically.
+              Bemor ma'lumotlarini to'ldiring va MRI/CT faylini yuklang. AI avtomatik tahlil qiladi.
             </p>
           </div>
-          <span class="badge rounded-pill bg-light text-muted border small">
-            AI-powered
-          </span>
+          <span class="badge rounded-pill bg-light text-muted border small">AI tahlil</span>
         </div>
 
         {% if form.non_field_errors %}
           <div class="alert alert-danger small">
-            {% for error in form.non_field_errors %}
-              <div>{{ error }}</div>
-            {% endfor %}
+            {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
           </div>
         {% endif %}
 
-        <!-- Form with ID for JS -->
-        <form method="post"
-              enctype="multipart/form-data"
-              novalidate
-              id="studyUploadForm">
+        <form method="post" enctype="multipart/form-data" novalidate id="studyUploadForm">
           {% csrf_token %}
 
-          <!-- Patient section -->
+          <!-- Bemor ma'lumotlari -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-uppercase small text-muted fw-semibold">
-                Patient information
-              </span>
-              <span class="badge bg-secondary-subtle text-secondary border small">
-                Min: first name
-              </span>
+              <span class="text-uppercase small text-muted fw-semibold">Bemor ma'lumotlari</span>
+              <span class="badge bg-secondary-subtle text-secondary border small">Ism majburiy</span>
             </div>
 
             <div class="row g-2">
               <div class="col-sm-6">
-                <label class="form-label small mb-1">First name</label>
+                <label class="form-label small mb-1">Ismi</label>
                 {{ form.first_name }}
                 {% if form.first_name.errors %}
-                  <div class="text-danger small mt-1">
-                    {{ form.first_name.errors.0 }}
-                  </div>
+                  <div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>
                 {% endif %}
               </div>
               <div class="col-sm-6">
-                <label class="form-label small mb-1">Last name</label>
+                <label class="form-label small mb-1">Familiyasi</label>
                 {{ form.last_name }}
               </div>
             </div>
 
             <div class="row g-2 mt-2">
               <div class="col-sm-6">
-                <label class="form-label small mb-1">Birth date</label>
+                <label class="form-label small mb-1">Tug'ilgan sana</label>
                 {{ form.birth_date }}
-                <div class="form-text small text-muted">
-                  Format: YYYY-MM-DD
-                </div>
+                <div class="form-text small text-muted">Format: YYYY-MM-DD</div>
               </div>
               <div class="col-sm-6">
-                <label class="form-label small mb-1">Patient ID (clinic)</label>
+                <label class="form-label small mb-1">Bemor ID (klinika)</label>
                 {{ form.identifier }}
-                <div class="form-text small text-muted">
-                  Hospital/clinic ID (optional).
-                </div>
+                <div class="form-text small text-muted">Kasalxona ID (ixtiyoriy).</div>
               </div>
             </div>
           </div>
 
           <hr class="my-3">
 
-          <!-- Study & file -->
+          <!-- Tekshiruv va fayl -->
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center mb-2">
-              <span class="text-uppercase small text-muted fw-semibold">
-                Study &amp; file
-              </span>
-              <span class="badge bg-light text-muted border small">
-                MRI / CT
-              </span>
+              <span class="text-uppercase small text-muted fw-semibold">Tekshiruv va fayl</span>
+              <span class="badge bg-light text-muted border small">MRI / CT</span>
             </div>
 
             <div class="row g-2">
               <div class="col-sm-4">
-                <label class="form-label small mb-1">Modality</label>
+                <label class="form-label small mb-1">Turi</label>
                 {{ form.modality }}
               </div>
               <div class="col-sm-8">
-                <label class="form-label small mb-1">Description</label>
+                <label class="form-label small mb-1">Tavsif</label>
                 {{ form.description }}
               </div>
             </div>
 
-            <!-- File input -->
             <div class="mt-3">
-              <label class="form-label small mb-1">Image file</label>
-              <div
-                class="rounded-3 p-3 bg-light position-relative"
-                style="border: 1px dashed rgba(0,0,0,0.15);"
-              >
+              <label class="form-label small mb-1">Tasvir fayli</label>
+              <div class="rounded-3 p-3 bg-light position-relative"
+                   style="border: 1px dashed rgba(0,0,0,0.15);">
                 {{ form.uploaded_file }}
                 <div class="form-text small text-muted mt-1">
-                  Supported: <code>.nii</code>, <code>.nii.gz</code> or
-                  <code>.zip</code> (DICOM series).
+                  Qo'llab-quvvatlanadi: <code>.nii</code>, <code>.nii.gz</code> yoki
+                  <code>.zip</code> (DICOM seriya).
                 </div>
                 <div class="position-absolute top-0 end-0 m-2 badge bg-white text-muted border small">
-                  3D volume required
+                  3D hajm talab qilinadi
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Submit + inline loader -->
           <button type="submit" class="btn btn-primary w-100 mt-3">
-            Upload &amp; run AI analysis
+            🧠 Yuklash va AI tahlilini boshlash
           </button>
 
-          <!-- Inline brain loader: sahifani bloklamaydi -->
           <div id="study-inline-loader" class="mt-3 d-none">
             <div class="brain-loader">
               <div class="brain-loader-orbit">
@@ -166,162 +137,100 @@
                 <div class="brain-loader-dot"></div>
               </div>
               <div class="brain-loader-text text-center">
-                Uploading your MRI...<br>
-                AI analysis is running in the background.
+                MRI yuklanmoqda...<br>
+                AI tahlil jarayonda, iltimos kuting.
               </div>
             </div>
           </div>
 
           <p class="text-muted small mt-2 mb-0">
-            After upload, the study will move to <strong>Processing</strong>, then automatically to
-            <strong>Done</strong> when AI finishes segmentation. You can safely navigate to other pages.
+            Yuklanganidan so'ng tekshiruv <strong>Jarayonda</strong> holatiga o'tadi, AI
+            segmentatsiyani tugallagach avtomatik <strong>Tayyor</strong> bo'ladi.
           </p>
         </form>
       </div>
     </div>
   </div>
 
-  <!-- RIGHT: Studies list with filter + search -->
+  <!-- O'NG: Tekshiruvlar ro'yxati -->
   <div class="col-xl-7">
     <div class="card border-0 shadow-sm h-100">
       <div class="card-body p-4 d-flex flex-column">
 
         <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
           <div>
-            <h2 class="h5 mb-1">My studies</h2>
-            <p class="text-muted small mb-0">
-              Sorted by newest. Use filters or search by patient.
-            </p>
+            <h2 class="h5 mb-1">Mening tekshiruvlarim</h2>
+            <p class="text-muted small mb-0">Eng yangilaridan. Bemor bo'yicha qidiring yoki filtrlang.</p>
           </div>
-
-          <!-- Search -->
           <div class="d-flex gap-2">
             <div class="input-group input-group-sm">
-              <span class="input-group-text">
-                🔍
-              </span>
-              <input
-                type="text"
-                id="studySearchInput"
-                class="form-control"
-                placeholder="Search patient / modality..."
-              >
+              <span class="input-group-text">🔍</span>
+              <input type="text" id="studySearchInput" class="form-control"
+                     placeholder="Bemor / tur bo'yicha qidirish...">
             </div>
           </div>
         </div>
 
-        <!-- Status filter pills -->
+        <!-- Holat filtrlari -->
         <div class="d-flex flex-wrap gap-2 mb-3 small">
-          <span class="text-muted me-1">Status:</span>
-          <button type="button" class="btn btn-sm btn-outline-secondary active"
-                  data-status-filter="all">
-            All
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-success"
-                  data-status-filter="done">
-            Done
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-primary"
-                  data-status-filter="processing">
-            Processing
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-secondary"
-                  data-status-filter="pending">
-            Pending
-          </button>
-          <button type="button" class="btn btn-sm btn-outline-danger"
-                  data-status-filter="error">
-            Error
-          </button>
+          <span class="text-muted me-1">Holat:</span>
+          <button type="button" class="btn btn-sm btn-outline-secondary active" data-status-filter="all">Barchasi</button>
+          <button type="button" class="btn btn-sm btn-outline-success" data-status-filter="done">Tayyor</button>
+          <button type="button" class="btn btn-sm btn-outline-primary" data-status-filter="processing">Jarayonda</button>
+          <button type="button" class="btn btn-sm btn-outline-secondary" data-status-filter="pending">Kutmoqda</button>
+          <button type="button" class="btn btn-sm btn-outline-danger" data-status-filter="error">Xatolik</button>
         </div>
 
         {% if studies %}
           <div id="studiesList" class="mt-2" style="max-height: 480px; overflow-y: auto;">
             {% for study in studies %}
-              <div
-                class="border rounded-3 p-3 mb-2 study-item"
-                data-status="{{ study.status }}"
-                data-search="{{ study.patient }} {{ study.modality }} {{ study.description|default_if_none:'' }}"
-                style="transition: box-shadow 0.15s ease, transform 0.1s ease;"
-              >
+              <div class="border rounded-3 p-3 mb-2 study-item"
+                   data-status="{{ study.status }}"
+                   data-search="{{ study.patient }} {{ study.modality }} {{ study.description|default_if_none:'' }}"
+                   style="transition: box-shadow 0.15s ease;">
                 <div class="d-flex justify-content-between align-items-start gap-3">
-
-                  <!-- Left info -->
                   <div class="flex-grow-1">
                     <div class="d-flex align-items-center gap-2 mb-1">
-                      <span class="fw-semibold">
-                        {{ study.patient }}
-                      </span>
-                      <span class="badge bg-light text-dark border small">
-                        #{{ study.id }}
-                      </span>
+                      <span class="fw-semibold">{{ study.patient }}</span>
+                      <span class="badge bg-light text-dark border small">#{{ study.id }}</span>
                     </div>
-
-                    <div class="small text-muted mb-1">
-                      {{ study.created_at|date:"Y-m-d H:i" }}
-                    </div>
-
-                    <!-- Badges (modality + NIfTI) -->
+                    <div class="small text-muted mb-1">{{ study.created_at|date:"d.m.Y H:i" }}</div>
                     <div class="d-flex flex-wrap gap-2 small mb-1">
-                      <span class="badge bg-light text-dark border">
-                        {{ study.modality }}
-                      </span>
-
+                      <span class="badge bg-light text-dark border">{{ study.modality }}</span>
                       {% if study.nifti_file %}
-                        <span class="badge bg-secondary-subtle text-secondary border">
-                          NIfTI ready
-                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary border">NIfTI tayyor</span>
                       {% endif %}
                     </div>
-
-                    <!-- Description -->
                     {% if study.description %}
-                      <div class="text-muted small text-truncate" style="max-width: 100%;">
-                        “{{ study.description }}”
-                      </div>
+                      <div class="text-muted small text-truncate">"{{ study.description }}"</div>
                     {% endif %}
                   </div>
 
-                  <!-- Right: status + button -->
                   <div class="text-end" style="min-width: 130px;">
                     <div class="mb-2">
                       {% if study.status == "done" %}
-                        <span class="badge bg-success-subtle text-success border small">
-                          ● Done
-                        </span>
+                        <span class="badge bg-success-subtle text-success border small">✓ Tayyor</span>
                       {% elif study.status == "processing" or study.status == "pending" %}
-                        <span class="badge bg-primary-subtle text-primary border small">
-                          ● Processing
-                        </span>
+                        <span class="badge bg-primary-subtle text-primary border small">⟳ Jarayonda</span>
                       {% elif study.status == "error" %}
-                        <span class="badge bg-danger-subtle text-danger border small">
-                          ● Error
-                        </span>
+                        <span class="badge bg-danger-subtle text-danger border small">✕ Xatolik</span>
                       {% else %}
-                        <span class="badge bg-secondary-subtle text-secondary border small">
-                          ● {{ study.status|title }}
-                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary border small">{{ study.status }}</span>
                       {% endif %}
                     </div>
-
-                    <a href="{% url 'tumor:study_detail' study.pk %}"
-                       class="btn btn-outline-secondary btn-sm">
-                      View details
+                    <a href="{% url 'tumor:study_detail' study.pk %}" class="btn btn-outline-secondary btn-sm">
+                      Batafsil
                     </a>
                   </div>
-
                 </div>
               </div>
             {% endfor %}
           </div>
         {% else %}
           <div class="mt-5 text-center text-muted small">
-            <p class="mb-1">
-              You don't have any studies yet.
-            </p>
-            <p class="mb-0">
-              Use the form on the left to upload your first MRI/CT scan.
-            </p>
+            <div style="font-size:3rem;">📂</div>
+            <p class="mt-2 mb-1">Hali hech qanday tekshiruv yo'q.</p>
+            <p class="mb-0">Birinchi MRI/CT skanini yuklash uchun chap tarafdagi formadan foydalaning.</p>
           </div>
         {% endif %}
       </div>
@@ -330,10 +239,8 @@
 
 </div>
 
-<!-- Tiny JS for search + filter + inline + floating loader -->
 <script>
   (function() {
-    // Search + filter
     const searchInput = document.getElementById('studySearchInput');
     const filterButtons = document.querySelectorAll('[data-status-filter]');
     const items = document.querySelectorAll('.study-item');
@@ -342,22 +249,14 @@
       const query = (searchInput?.value || '').toLowerCase().trim();
       const activeBtn = document.querySelector('[data-status-filter].active');
       const statusFilter = activeBtn ? activeBtn.getAttribute('data-status-filter') : 'all';
-
       items.forEach(item => {
-        const itemStatus = (item.getAttribute('data-status') || '').toLowerCase();
-        const searchText = (item.getAttribute('data-search') || '').toLowerCase();
-
-        const matchesStatus = (statusFilter === 'all') || (itemStatus === statusFilter);
-        const matchesSearch = !query || searchText.includes(query);
-
+        const matchesStatus = (statusFilter === 'all') || (item.getAttribute('data-status') === statusFilter);
+        const matchesSearch = !query || (item.getAttribute('data-search') || '').toLowerCase().includes(query);
         item.style.display = (matchesStatus && matchesSearch) ? '' : 'none';
       });
     }
 
-    if (searchInput) {
-      searchInput.addEventListener('input', applyFilters);
-    }
-
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
     filterButtons.forEach(btn => {
       btn.addEventListener('click', function() {
         filterButtons.forEach(b => b.classList.remove('active'));
@@ -366,21 +265,13 @@
       });
     });
 
-    // Inline va floating brain loader on form submit
     const uploadForm = document.getElementById('studyUploadForm');
     const inlineLoader = document.getElementById('study-inline-loader');
-    const floatingLoader = document.getElementById('floating-brain-loader'); // base.html dan
-
     if (uploadForm) {
       uploadForm.addEventListener('submit', function() {
-        if (inlineLoader) {
-          inlineLoader.classList.remove('d-none');
-        }
-        if (floatingLoader) {
-          floatingLoader.style.display = 'block';
-        }
-        // Form klassik submit qiladi, user boshqa sahifaga o'tishi mumkin.
-        // Yangi sahifaga o'tgach, DOM qayta yuklanadi va loader ham yo'qoladi.
+        if (inlineLoader) inlineLoader.classList.remove('d-none');
+        const btn = uploadForm.querySelector('[type=submit]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Yuklanmoqda...'; }
       });
     }
   })();

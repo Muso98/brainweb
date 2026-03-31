@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Login · BrainWeb{% endblock %}
+{% block title %}Kirish · BrainWeb{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
@@ -9,58 +9,45 @@
     <div class="col-md-8 col-lg-7 col-xl-6">
       <div class="card card-soft">
         <div class="row g-0">
-          <!-- Left block: gradient / info -->
+          <!-- Chap blok -->
           <div class="col-md-5 d-none d-md-flex align-items-stretch">
             <div class="w-100 h-100 p-4 text-white"
-                 style="
-                   border-top-left-radius: 1rem;
-                   border-bottom-left-radius: 1rem;
-                   background: radial-gradient(circle at top left, #4f46e5, #1e293b);
-                 ">
+                 style="border-top-left-radius:1rem; border-bottom-left-radius:1rem;
+                        background: radial-gradient(circle at top left, #4f46e5, #1e293b);">
               <div class="d-flex flex-column h-100">
                 <div class="mb-3">
-                  <span class="badge bg-light text-dark badge-pill mb-2">
-                    For healthcare professionals
-                  </span>
-                  <h2 class="h5 mb-1">Brain tumor analysis</h2>
+                  <span class="badge bg-light text-dark badge-pill mb-2">Tibbiy mutaxassislar uchun</span>
+                  <h2 class="h5 mb-1">Miya o'smasi tahlili</h2>
                   <p class="small text-white-50 mb-0">
-                    Secure web platform for uploading MRI/CT scans and
-                    viewing AI-assisted tumor segmentation, volumetry and reports.
+                    MRI/CT skanlarini yuklash va AI yordamida o'sima segmentatsiyasi,
+                    volumetriya va hisobotlarni ko'rish uchun xavfsiz platforma.
                   </p>
                 </div>
-
                 <div class="mt-auto small text-white-50">
-                  <div class="mb-1">✓ DICOM / NIfTI upload</div>
-                  <div class="mb-1">✓ 3D segmentation overlays</div>
-                  <div class="mb-1">✓ Structured PDF reports</div>
+                  <div class="mb-1">✓ DICOM / NIfTI yuklash</div>
+                  <div class="mb-1">✓ 3D segmentatsiya ko'rinishi</div>
+                  <div class="mb-1">✓ PDF hisobotlar</div>
                   <hr class="border-secondary border-opacity-50 my-2">
-                  <div class="fw-semibold mb-1">
-                    AI assistant
-                  </div>
-                  <div>
-                    • AI assistant supports Uzbek, Russian and English.<br>
-                    • The platform is intended for clinicians, not for patient self-diagnosis.
-                  </div>
+                  <div class="fw-semibold mb-1">AI yordamchi</div>
+                  <div>• O'zbek, rus va ingliz tillarini qo'llab-quvvatlaydi.</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- Right block: form -->
+          <!-- O'ng blok: forma -->
           <div class="col-md-7">
             <div class="p-4 p-md-5">
               <div class="mb-4 text-center text-md-start">
-                <h1 class="h4 mb-1">Welcome back</h1>
+                <h1 class="h4 mb-1">Xush kelibsiz</h1>
                 <p class="text-muted small mb-0">
-                  Log in to review your MRI studies, AI results and reports.
+                  MRI tekshiruvlari, AI natijalari va hisobotlarni ko'rish uchun kiring.
                 </p>
               </div>
 
               {% if form.non_field_errors %}
                 <div class="alert alert-danger small">
-                  {% for error in form.non_field_errors %}
-                    <div>{{ error }}</div>
-                  {% endfor %}
+                  {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
                 </div>
               {% endif %}
 
@@ -68,57 +55,38 @@
                 {% csrf_token %}
 
                 <div class="mb-3">
-                  <label for="{{ form.username.id_for_label }}" class="form-label small">
-                    Username
-                  </label>
+                  <label for="{{ form.username.id_for_label }}" class="form-label small">Foydalanuvchi nomi</label>
                   {{ form.username }}
                   {% if form.username.errors %}
-                    <div class="invalid-feedback d-block small">
-                      {% for error in form.username.errors %}
-                        {{ error }}
-                      {% endfor %}
-                    </div>
+                    <div class="invalid-feedback d-block small">{% for e in form.username.errors %}{{ e }}{% endfor %}</div>
                   {% endif %}
                 </div>
 
                 <div class="mb-2">
-                  <label for="{{ form.password.id_for_label }}" class="form-label small">
-                    Password
-                  </label>
+                  <label for="{{ form.password.id_for_label }}" class="form-label small">Parol</label>
                   {{ form.password }}
                   {% if form.password.errors %}
-                    <div class="invalid-feedback d-block small">
-                      {% for error in form.password.errors %}
-                        {{ error }}
-                      {% endfor %}
-                    </div>
+                    <div class="invalid-feedback d-block small">{% for e in form.password.errors %}{{ e }}{% endfor %}</div>
                   {% endif %}
                 </div>
 
                 <div class="d-flex justify-content-between align-items-center mb-4">
                   <div class="form-check small">
-                    <input class="form-check-input" type="checkbox" value="" id="rememberMe">
-                    <label class="form-check-label" for="rememberMe">
-                      Remember me
-                    </label>
+                    <input class="form-check-input" type="checkbox" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">Eslab qolish</label>
                   </div>
-                  <!-- Password reset can be added later -->
-                  {# <a href="#" class="small">Forgot password?</a> #}
                 </div>
 
-                <button type="submit" class="btn btn-primary w-100 mb-3">
-                  Log in
-                </button>
+                <button type="submit" class="btn btn-primary w-100 mb-3">Kirish</button>
               </form>
 
               <div class="small text-center text-muted">
-                User accounts are created by the system administrator.<br>
-                If you are a clinician and need access, please contact the admin.
+                Foydalanuvchi hisobi tizim ma'muri tomonidan yaratiladi.<br>
+                Kirish kerak bo'lsa, ma'mur bilan bog'laning.
               </div>
             </div>
           </div>
-
-        </div> <!-- row -->
+        </div>
       </div>
     </div>
   </div>

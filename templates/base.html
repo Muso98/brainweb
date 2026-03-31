@@ -25,36 +25,28 @@
 
   <nav class="navbar navbar-expand-lg bg-white border-bottom mb-3">
     <div class="container-lg">
-      {# Brand points to dashboard for authenticated users, otherwise to public about #}
-      {% if user.is_authenticated %}
-        {% url 'tumor:dashboard' as brand_url %}
-      {% else %}
-        {% url 'tumor:about' as brand_url %}
-      {% endif %}
-      <a class="navbar-brand fw-semibold" href="{{ brand_url }}">🧠 BrainWeb</a>
+      <a class="navbar-brand fw-semibold" href="{% url 'tumor:dashboard' %}">🧠 BrainWeb</a>
 
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Menyuni ochish">
         <span class="navbar-toggler-icon"></span>
       </button>
 
       <div class="collapse navbar-collapse" id="mainNavbar">
         <ul class="navbar-nav me-auto">
-          <li class="nav-item"><a class="nav-link" href="{% url 'tumor:about' %}">About</a></li>
-          {% if user.is_authenticated %}
-            <li class="nav-item"><a class="nav-link" href="{% url 'tumor:dashboard' %}">Dashboard</a></li>
-            <li class="nav-item"><a class="nav-link" href="{% url 'tumor:study_list' %}">Studies</a></li>
-          {% endif %}
+          <li class="nav-item"><a class="nav-link" href="{% url 'tumor:about' %}">Biz haqimizda</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'tumor:dashboard' %}">Boshqaruv paneli</a></li>
+          <li class="nav-item"><a class="nav-link" href="{% url 'tumor:study_list' %}">Tekshiruvlar</a></li>
         </ul>
 
         <div class="d-flex align-items-center gap-2">
           {% if user.is_authenticated %}
-            <span class="small text-muted" aria-hidden="true">{{ user.username }}</span>
-            <form method="post" action="{% url 'tumor:logout' %}" class="d-inline" aria-label="Logout form">
+            <span class="small text-muted">{{ user.username }}</span>
+            <form method="post" action="{% url 'tumor:logout' %}" class="d-inline">
               {% csrf_token %}
-              <button class="btn btn-outline-secondary btn-sm" type="submit">Logout</button>
+              <button class="btn btn-outline-secondary btn-sm" type="submit">Chiqish</button>
             </form>
           {% else %}
-            <a class="btn btn-outline-primary btn-sm" href="{% url 'tumor:login' %}">Login</a>
+            <a class="btn btn-outline-primary btn-sm" href="{% url 'tumor:login' %}">Kirish</a>
           {% endif %}
         </div>
       </div>
@@ -67,7 +59,7 @@
         {% for message in messages %}
           <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
             {{ message }}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Yopish"></button>
           </div>
         {% endfor %}
       </div>
@@ -82,84 +74,67 @@
         <div class="brain-loader-emoji">🧠</div>
         <div class="brain-loader-dot"></div>
       </div>
-      <div class="brain-loader-text text-center mt-1">AI analysis in progress...</div>
+      <div class="brain-loader-text text-center mt-1">AI tahlil qilinmoqda...</div>
     </div>
   </div>
 
-  {% if user.is_authenticated %}
-    <div id="chatbot-container" data-chat-url="{% url 'tumor:chat_api' %}">
-      <button id="chatbot-button" class="btn" title="AI assistant" aria-expanded="false" aria-controls="chatbot-window">💬</button>
+  <div id="chatbot-container" data-chat-url="{% url 'tumor:chat_api' %}">
+    <button id="chatbot-button" class="btn" title="AI yordamchi" aria-expanded="false" aria-controls="chatbot-window">💬</button>
 
-      <div id="chatbot-window" role="dialog" aria-hidden="true" aria-labelledby="chatbot-title">
-        <div id="chatbot-header" class="p-2 d-flex align-items-center justify-content-between">
-          <div class="d-flex align-items-center gap-2">
-            <div class="chatbot-avatar">🤖</div>
-            <div>
-              <div id="chatbot-title" class="chatbot-title">BrainWeb Assistant</div>
-              <div class="chatbot-status"><span class="status-dot" aria-hidden="true"></span> Online</div>
-            </div>
+    <div id="chatbot-window" role="dialog" aria-hidden="true" aria-labelledby="chatbot-title">
+      <div id="chatbot-header" class="p-2 d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+          <div class="chatbot-avatar">🤖</div>
+          <div>
+            <div id="chatbot-title" class="chatbot-title">BrainWeb Yordamchi</div>
+            <div class="chatbot-status"><span class="status-dot" aria-hidden="true"></span> Faol</div>
           </div>
-          <button id="chatbot-close" class="btn btn-sm" aria-label="Close chat">✕</button>
         </div>
-        <div id="chatbot-messages" class="p-2" aria-live="polite"></div>
-        <form id="chatbot-form" class="p-2" role="form" aria-label="Chat form">
-          <input type="text" id="chatbot-input" placeholder="Savolingizni yozing..." autocomplete="off" aria-label="Message">
-          <button type="submit" class="btn btn-primary btn-sm">Send</button>
-        </form>
+        <button id="chatbot-close" class="btn btn-sm" aria-label="Yopish">✕</button>
       </div>
+      <div id="chatbot-messages" class="p-2" aria-live="polite"></div>
+      <form id="chatbot-form" class="p-2" role="form" aria-label="Chat formasi">
+        <input type="text" id="chatbot-input" placeholder="Savolingizni yozing..." autocomplete="off" aria-label="Xabar">
+        <button type="submit" class="btn btn-primary btn-sm">Yuborish</button>
+      </form>
     </div>
-  {% endif %}
+  </div>
 
   <footer class="bw-footer mt-5 py-5 border-top bg-light" role="contentinfo">
     <div class="container">
       <div class="row gy-4">
 
         <div class="col-md-4">
-          <h6 class="fw-bold mb-2">BrainWeb · Medical AI Platform</h6>
-          <p class="text-muted small mb-2">AI-assisted tumor detection, segmentation and clinical decision support.</p>
-          <p class="small text-muted mb-0">Ташкент · 2025</p>
+          <h6 class="fw-bold mb-2">BrainWeb · Tibbiy AI Platformasi</h6>
+          <p class="text-muted small mb-2">AI yordamida miya o'smalarini aniqlash, segmentatsiya va klinik qaror qabul qilishni qo'llab-quvvatlash.</p>
+          <p class="small text-muted mb-0">Toshkent · 2025</p>
           <div class="mt-3">
             <a href="mailto:support@brainweb.ai" class="text-decoration-none small me-3">support@brainweb.ai</a>
-            <a href="{% url 'tumor:documentation' %}" class="text-decoration-none small">Documentation</a>
+            <a href="{% url 'tumor:documentation' %}" class="text-decoration-none small">Hujjatlar</a>
           </div>
         </div>
 
         <div class="col-md-4">
           <h6 class="fw-bold mb-2">Tez havolalar</h6>
           <ul class="list-unstyled small mb-0">
-            <li><a href="{% url 'tumor:about' %}" class="text-decoration-none text-muted">About</a></li>
-            <li><a href="{% url 'tumor:study_list' %}" class="text-decoration-none text-muted">Studies</a></li>
-            <li><a href="{% url 'tumor:faq' %}" class="text-decoration-none text-muted">FAQ</a></li>
-            <li><a href="{% url 'tumor:privacy' %}" class="text-decoration-none text-muted">Privacy Policy</a></li>
-            <li><a href="{% url 'tumor:terms' %}" class="text-decoration-none text-muted">Terms of Service</a></li>
+            <li><a href="{% url 'tumor:about' %}" class="text-decoration-none text-muted">Biz haqimizda</a></li>
+            <li><a href="{% url 'tumor:study_list' %}" class="text-decoration-none text-muted">Tekshiruvlar</a></li>
+            <li><a href="{% url 'tumor:faq' %}" class="text-decoration-none text-muted">Ko'p so'raladigan savollar</a></li>
+            <li><a href="{% url 'tumor:privacy' %}" class="text-decoration-none text-muted">Maxfiylik siyosati</a></li>
+            <li><a href="{% url 'tumor:terms' %}" class="text-decoration-none text-muted">Foydalanish shartlari</a></li>
           </ul>
         </div>
 
         <div class="col-md-4">
           <h6 class="fw-bold mb-2">Aloqa va yangiliklar</h6>
-
           <form id="footer-newsletter-form" class="d-flex mb-3" action="{% url 'tumor:subscribe' %}" method="post" novalidate>
             {% csrf_token %}
             <label for="newsletter-email" class="visually-hidden">Email</label>
-            <input id="newsletter-email" name="email" type="email" required placeholder="Emailingizni kiriting" class="form-control form-control-sm me-2" aria-label="Newsletter email">
-            <button class="btn btn-primary btn-sm" type="submit">Obuna bo'lish</button>
+            <input id="newsletter-email" name="email" type="email" required placeholder="Emailingizni kiriting" class="form-control form-control-sm me-2" aria-label="Yangiliklar uchun email">
+            <button class="btn btn-primary btn-sm" type="submit">Obuna</button>
           </form>
-
-          <p class="small text-muted mb-2">Yordam va texnik muammolar uchun yozing:</p>
+          <p class="small text-muted mb-2">Yordam va texnik muammolar uchun:</p>
           <a href="mailto:support@brainweb.ai" class="d-inline-block text-decoration-none mb-2">✉ support@brainweb.ai</a>
-
-          <div class="mt-3 d-flex gap-2">
-            <!-- social icons -->
-            <a href="https://twitter.com/brainweb" aria-label="Twitter" target="_blank" rel="noopener">
-              <!-- svg -->
-            </a>
-            <a href="https://linkedin.com/company/brainweb" aria-label="LinkedIn" target="_blank" rel="noopener">
-              <!-- svg -->
-            </a>
-            <a href="https://github.com/brainweb" aria-label="GitHub" target="_blank" rel="noopener">
-              <!-- svg -->
-            </a>
-          </div>
         </div>
 
       </div>
@@ -170,16 +145,14 @@
       {% now "Y-m-d" as today_date %}
       <div class="d-flex flex-column flex-md-row justify-content-between align-items-center small text-muted">
         <div>
-          © {{ this_year }} BrainWeb - All rights reserved.
-          <span class="mx-2">-</span>
-          Version 1.0.0
-          <span class="mx-2">-</span>
-          Last updated: {{ last_updated|default:today_date }}
+          © {{ this_year }} BrainWeb — Barcha huquqlar himoyalangan.
+          <span class="mx-2">·</span>
+          Versiya 1.0.0
         </div>
         <div class="mt-2 mt-md-0">
-          <a href="{% url 'tumor:privacy' %}" class="text-muted text-decoration-none me-3">Privacy</a>
-          <a href="{% url 'tumor:terms' %}" class="text-muted text-decoration-none me-3">Terms</a>
-          <a href="{% url 'tumor:contact' %}" class="text-muted text-decoration-none">Contact</a>
+          <a href="{% url 'tumor:privacy' %}" class="text-muted text-decoration-none me-3">Maxfiylik</a>
+          <a href="{% url 'tumor:terms' %}" class="text-muted text-decoration-none me-3">Shartlar</a>
+          <a href="{% url 'tumor:contact' %}" class="text-muted text-decoration-none">Aloqa</a>
         </div>
       </div>
     </div>
@@ -188,7 +161,6 @@
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
-    // BrainLoader API (aria-friendly)
     window.BrainLoader = {
       show() {
         const el = document.getElementById("floating-brain-loader");
@@ -206,19 +178,20 @@
       }
     };
 
-    // Chatbot open/close
     (function(){
       const btn = document.getElementById("chatbot-button");
       const wnd = document.getElementById("chatbot-window");
       const closeBtn = document.getElementById("chatbot-close");
       if (!btn || !wnd) return;
-
       btn.addEventListener("click", () => {
         const isOpen = wnd.getAttribute("aria-hidden") === "false";
         wnd.setAttribute("aria-hidden", isOpen ? "true" : "false");
         btn.setAttribute("aria-expanded", String(!isOpen));
       });
-      if (closeBtn) closeBtn.addEventListener("click", () => { wnd.setAttribute("aria-hidden","true"); btn.setAttribute("aria-expanded","false"); });
+      if (closeBtn) closeBtn.addEventListener("click", () => {
+        wnd.setAttribute("aria-hidden","true");
+        btn.setAttribute("aria-expanded","false");
+      });
     })();
   </script>
 
