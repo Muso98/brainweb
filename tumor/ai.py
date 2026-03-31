@@ -291,7 +291,7 @@ def generate_overlay_png(nifti_path: str, mask_nifti_path: str) -> Optional[str]
 RESNET_MEAN = [0.485, 0.456, 0.406]
 RESNET_STD = [0.229, 0.224, 0.225]
 
-_tumor_clf_model: Optional[nn.Module] = None
+_tumor_clf_model = None
 _tumor_clf_classes: Optional[List[str]] = None
 def _load_tumor_clf_model():
     global _tumor_clf_model, _tumor_clf_classes
