@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tibbiy Hisobot · Tekshiruv #{{ study.id }} · BrainWeb</title>
+  <style>
+    /* ---- Reset & Base ---- */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 14px; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, Arial, sans-serif;
+      background: #f0f4f8;
+      color: #1a2332;
+      line-height: 1.5;
+    }
+
+    /* ---- Print-only layout ---- */
+    @media print {
+      body { background: #fff; }
+      .no-print { display: none !important; }
+      .page { box-shadow: none !important; margin: 0 !important; border-radius: 0 !important; max-width: 100% !important; }
+      .page-break { page-break-before: always; }
+    }
+
+    /* ---- Screen layout ---- */
+    .page {
+      max-width: 860px;
+      margin: 2rem auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 4px 32px rgba(0,0,0,0.12);
+      overflow: hidden;
+    }
+
+    /* ---- Header ---- */
+    .report-header {
+      background: linear-gradient(135deg, #1e3a5f 0%, #4f46e5 100%);
+      color: #fff;
+      padding: 2rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .report-header .brand { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.5px; }
+    .report-header .brand span { opacity: 0.65; font-weight: 400; font-size: 0.9rem; display: block; margin-top: 2px; }
+    .report-header .meta { text-align: right; font-size: 0.8rem; opacity: 0.85; line-height: 1.8; }
+    .report-header .meta strong { font-size: 1rem; opacity: 1; display: block; }
+
+    /* ---- Status banner ---- */
+    .status-banner {
+      padding: 0.9rem 2.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-weight: 600;
+      font-size: 1rem;
+    }
+    .status-banner.detected { background: #fef2f2; border-left: 5px solid #ef4444; color: #991b1b; }
+    .status-banner.normal { background: #f0fdf4; border-left: 5px solid #22c55e; color: #15803d; }
+    .status-banner .icon { font-size: 1.6rem; }
+    .status-banner .sub { font-size: 0.8rem; font-weight: 400; opacity: 0.75; margin-top: 2px; }
+
+    /* ---- Body ---- */
+    .report-body { padding: 2rem 2.5rem; }
+
+    /* ---- Section ---- */
+    .section { margin-bottom: 1.75rem; }
+    .section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6b7280;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    /* ---- Info grid ---- */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 0.75rem;
+    }
+    .info-cell {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 0.65rem 0.9rem;
+    }
+    .info-cell .label { font-size: 0.7rem; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.5px; }
+    .info-cell .value { font-size: 1rem; font-weight: 600; color: #1a2332; margin-top: 2px; }
+    .info-cell .value.accent { color: #4f46e5; }
+    .info-cell .value.danger { color: #dc2626; }
+    .info-cell .value.success { color: #16a34a; }
+
+    /* ---- Metrics row ---- */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+    .metric-card {
+      background: linear-gradient(135deg, #f8faff, #f0f4ff);
+      border: 1px solid #dde4f8;
+      border-radius: 10px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .metric-card .m-label { font-size: 0.68rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .metric-card .m-value { font-size: 1.5rem; font-weight: 700; color: #1e3a5f; margin: 4px 0 2px; }
+    .metric-card .m-unit { font-size: 0.7rem; color: #9ca3af; }
+
+    /* ---- Findings box ---- */
+    .findings-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #374151;
+      white-space: pre-line;
+    }
+
+    /* ---- Recommendation box ---- */
+    .recommendation-box {
+      background: linear-gradient(135deg, #eff6ff, #f0f4ff);
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: #1e40af;
+      white-space: pre-line;
+    }
+    .recommendation-box::before {
+      content: "💡 ";
+    }
+
+    /* ---- Severity badge ---- */
+    .severity {
+      display: inline-block;
+      padding: 0.2rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .severity.high { background: #fee2e2; color: #b91c1c; }
+    .severity.moderate { background: #fef3c7; color: #92400e; }
+    .severity.low { background: #d1fae5; color: #065f46; }
+
+    /* ---- MRI Image ---- */
+    .mri-img-wrap {
+      text-align: center;
+      background: #0b1220;
+      border-radius: 8px;
+      padding: 1rem;
+      overflow: hidden;
+    }
+    .mri-img-wrap img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .mri-caption { font-size: 0.72rem; color: #9ca3af; margin-top: 0.5rem; }
+
+    /* ---- Disclaimer ---- */
+    .disclaimer {
+      background: #fffbeb;
+      border: 1px solid #fcd34d;
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      color: #78350f;
+      line-height: 1.6;
+    }
+    .disclaimer strong { display: block; margin-bottom: 2px; }
+
+    /* ---- Footer ---- */
+    .report-footer {
+      border-top: 1px solid #e5e7eb;
+      padding: 1rem 2.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.72rem;
+      color: #9ca3af;
+      background: #fafafa;
+    }
+
+    /* ---- Print button ---- */
+    .print-bar {
+      max-width: 860px;
+      margin: 0 auto 1rem;
+      display: flex;
+      gap: 0.75rem;
+      padding: 0 0.5rem;
+    }
+    .btn-print {
+      background: #4f46e5;
+      color: #fff;
+      border: none;
+      padding: 0.6rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(79,70,229,0.25);
+    }
+    .btn-print:hover { background: #4338ca; }
+    .btn-back {
+      background: #f1f5f9;
+      color: #374151;
+      border: 1px solid #e2e8f0;
+      padding: 0.6rem 1.2rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .btn-back:hover { background: #e2e8f0; }
+
+    /* ---- Two-column layout ---- */
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } .metrics-row { grid-template-columns: repeat(2, 1fr); } }
+  </style>
+</head>
+<body>
+
+<!-- Print / Back bar (screen only) -->
+<div class="print-bar no-print">
+  <button class="btn-print" onclick="window.print()">🖨 PDF sifatida saqlash / Chop etish</button>
+  <a href="javascript:history.back()" class="btn-back">← Ortga</a>
+</div>
+
+<div class="page">
+
+  <!-- ===== HEADER ===== -->
+  <div class="report-header">
+    <div class="brand">
+      🧠 BrainWeb
+      <span>Miya o'smasi tahlili tizimi &nbsp;·&nbsp; Tibbiy hisobot</span>
+    </div>
+    <div class="meta">
+      <strong>Tekshiruv #{{ study.id }}</strong>
+      Sana: {{ study.created_at|date:"d.m.Y H:i" }}<br>
+      Hisobot: {{ generated_at|date:"d.m.Y H:i" }}<br>
+      {{ study.modality }} tekshiruvi
+    </div>
+  </div>
+
+  <!-- ===== STATUS BANNER ===== -->
+  {% if groq_data and groq_data.tumor_detected %}
+    <div class="status-banner detected">
+      <span class="icon">⚠️</span>
+      <div>
+        O'sima aniqlandi
+        {% if groq_data.severity %}
+          &nbsp;·&nbsp;
+          <span class="severity {{ groq_data.severity }}">
+            {% if groq_data.severity == "high" %}Jiddiy daraja
+            {% elif groq_data.severity == "moderate" %}O'rtacha daraja
+            {% else %}Past daraja{% endif %}
+          </span>
+        {% endif %}
+        <div class="sub">Klinik tasdiqlash tavsiya etiladi</div>
+      </div>
+    </div>
+  {% elif groq_data %}
+    <div class="status-banner normal">
+      <span class="icon">✅</span>
+      <div>
+        O'sima belgilari aniqlanmadi
+        <div class="sub">AI tahlili normal ko'rsatdi — klinik tekshiruvni davom ettiring</div>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- ===== BODY ===== -->
+  <div class="report-body">
+
+    <!-- Patient & Study info -->
+    <div class="two-col section">
+      <div>
+        <div class="section-title">Bemor ma'lumotlari</div>
+        <div class="info-grid">
+          <div class="info-cell">
+            <div class="label">Ismi</div>
+            <div class="value">{{ study.patient.first_name }} {{ study.patient.last_name }}</div>
+          </div>
+          <div class="info-cell">
+            <div class="label">Tug'ilgan sana</div>
+            <div class="value">{% if study.patient.birth_date %}{{ study.patient.birth_date|date:"d.m.Y" }}{% else %}—{% endif %}</div>
+          </div>
+          <div class="info-cell">
+            <div class="label">Klinika ID</div>
+            <div class="value">{{ study.patient.identifier|default:"—" }}</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="section-title">Tekshiruv ma'lumotlari</div>
+        <div class="info-grid">
+          <div class="info-cell">
+            <div class="label">Turi</div>
+            <div class="value accent">{{ study.modality }}</div>
+          </div>
+          <div class="info-cell">
+            <div class="label">Holati</div>
+            <div class="value {% if study.status == 'done' %}success{% elif study.status == 'error' %}danger{% endif %}">
+              {% if study.status == "done" %}Tayyor
+              {% elif study.status == "error" %}Xatolik
+              {% elif study.status == "processing" %}Jarayonda
+              {% else %}{{ study.status }}{% endif %}
+            </div>
+          </div>
+          {% if study.description %}
+          <div class="info-cell" style="grid-column: 1 / -1;">
+            <div class="label">Tavsif</div>
+            <div class="value" style="font-size:0.85rem; font-weight:400;">{{ study.description }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- AI Metrics -->
+    {% if ai_result %}
+    <div class="section">
+      <div class="section-title">AI tahlil ko'rsatkichlari</div>
+      <div class="metrics-row">
+        <div class="metric-card">
+          <div class="m-label">Holat</div>
+          {% if groq_data and groq_data.tumor_detected %}
+            <div class="m-value" style="color:#dc2626; font-size:1.1rem;">O'sima bor</div>
+          {% else %}
+            <div class="m-value" style="color:#16a34a; font-size:1.1rem;">Normal</div>
+          {% endif %}
+          <div class="m-unit">AI xulosasi</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">O'sima turi</div>
+          <div class="m-value" style="font-size:0.95rem;">{{ ai_result.predicted_class|default:"—" }}</div>
+          <div class="m-unit">AI tasniflash</div>
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Hajm (taxmin)</div>
+          {% if volume_cm3 %}
+            <div class="m-value">{{ volume_cm3|floatformat:1 }}</div>
+            <div class="m-unit">cm³</div>
+          {% else %}
+            <div class="m-value">—</div>
+            <div class="m-unit">ma'lumot yo'q</div>
+          {% endif %}
+        </div>
+        <div class="metric-card">
+          <div class="m-label">Ishonch</div>
+          {% if ai_result.predicted_confidence %}
+            <div class="m-value">{{ ai_result.predicted_confidence|floatformat:0 }}%</div>
+          {% else %}
+            <div class="m-value">—</div>
+          {% endif %}
+          <div class="m-unit">AI confidence</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- MRI Slices image -->
+    {% if slice_image_url %}
+    <div class="section">
+      <div class="section-title">MRI Kesim tasvirlari (Axial · Coronal · Sagittal)</div>
+      <div class="mri-img-wrap">
+        <img src="{{ slice_image_url }}" alt="MRI kesim tasvirlari">
+        <div class="mri-caption">AI tahlil uchun qayta ishlangan MRI kesimlar</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Groq AI findings & recommendations -->
+    {% if groq_data %}
+    <div class="two-col section">
+      {% if groq_data.findings %}
+      <div>
+        <div class="section-title">Radiologik topilmalar</div>
+        <div class="findings-box">{{ groq_data.findings }}</div>
+      </div>
+      {% endif %}
+      {% if groq_data.recommendation %}
+      <div>
+        <div class="section-title">Tavsiyalar</div>
+        <div class="recommendation-box">{{ groq_data.recommendation }}</div>
+      </div>
+      {% endif %}
+    </div>
+
+    {% if groq_data.location %}
+    <div class="section">
+      <div class="section-title">O'sima joylashuvi</div>
+      <div class="info-cell" style="max-width: 320px;">
+        <div class="label">Joylashuv</div>
+        <div class="value">{{ groq_data.location }}</div>
+      </div>
+    </div>
+    {% endif %}
+    {% endif %}
+
+    <!-- Disclaimer -->
+    <div class="section">
+      <div class="disclaimer">
+        <strong>⚠️ Muhim eslatma</strong>
+        Ushbu hisobot sun'iy intellekt (AI) tomonidan avtomatik ravishda tayyorlangan va faqat
+        dastlabki ma'lumot sifatida xizmat qiladi. Yakuniy tibbiy xulosa va davolash rejalari
+        malakali shifokor tomonidan klinik tekshiruv asosida aniqlanishi shart.
+        Hisobot sud tibbiy hujjati sifatida ishlatilishi mumkin emas.
+      </div>
+    </div>
+
+  </div><!-- /.report-body -->
+
+  <!-- ===== FOOTER ===== -->
+  <div class="report-footer">
+    <div>
+      🧠 BrainWeb · Tibbiy AI Platformasi &nbsp;·&nbsp; brainweb.onrender.com
+    </div>
+    <div>
+      {% if groq_data and groq_data.model %}AI: {{ groq_data.model }} &nbsp;·&nbsp; {% endif %}
+      Hisobot: {{ generated_at|date:"d.m.Y H:i" }}
+    </div>
+  </div>
+
+</div><!-- /.page -->
+
+<script>
+  // Auto-trigger print when opened via PDF button
+  if (window.location.search.includes('autoprint=1')) {
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.print(); }, 400);
+    });
+  }
+</script>
+
+</body>
+</html>

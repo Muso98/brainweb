@@ -12,7 +12,6 @@ import os
 import json
 import logging
 import traceback
-from io import BytesIO
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 
@@ -41,10 +40,6 @@ from .models import Patient, Study, AIResult
 from .forms import StudyUploadForm, BrainwebAuthenticationForm
 from .ai_agent import run_brainweb_agent
 
-# Utils (small helpers - implement under .utils)
-from .utils.slices import generate_slice_gallery       # should return list of absolute paths
-from .utils.preview3d import generate_3d_preview       # render static 3D snapshot
-from .utils.qrgen import generate_qr                   # simple QR PNG generator
 
 logger = logging.getLogger(__name__)
 
@@ -412,6 +407,7 @@ def study_detail(request, pk):
 # Advanced PDF report v2.0
 # ----------------------------
 def study_report_pdf(request, pk):
+    """Render a print-friendly HTML report that auto-triggers browser print dialog."""
     study = get_object_or_404(Study.objects.select_related("patient"), pk=pk)
 
     session_study_ids = request.session.get("study_ids", [])
@@ -421,162 +417,33 @@ def study_report_pdf(request, pk):
 
     ai_result = getattr(study, "ai_result", None)
 
-    # overlay / grad-cam / uncertainty absolute URLs
-    overlay_url = grad_cam_url = uncertainty_map_url = None
-    try:
-        if ai_result and getattr(ai_result, "bbox_png", None):
-            overlay_url = _rel_or_fs_to_abs_url(request, ai_result.bbox_png.path if hasattr(ai_result.bbox_png, "path") else ai_result.bbox_png.url)
-    except Exception:
-        logger.debug("Failed to build overlay_url", exc_info=True)
-    try:
-        if ai_result and getattr(ai_result, "grad_cam_png", None):
-            grad_cam_url = _rel_or_fs_to_abs_url(request, ai_result.grad_cam_png.path if hasattr(ai_result.grad_cam_png, "path") else ai_result.grad_cam_png.url)
-    except Exception:
-        logger.debug("Failed to build grad_cam_url", exc_info=True)
-    try:
-        if ai_result and getattr(ai_result, "uncertainty_png", None):
-            uncertainty_map_url = _rel_or_fs_to_abs_url(request, ai_result.uncertainty_png.path if hasattr(ai_result.uncertainty_png, "path") else ai_result.uncertainty_png.url)
-    except Exception:
-        logger.debug("Failed to build uncertainty_map_url", exc_info=True)
+    volume_cm3 = None
+    if ai_result and ai_result.tumor_volume_mm3 is not None:
+        volume_cm3 = ai_result.tumor_volume_mm3 / 1000.0
 
-    # QR generation for report (saved under MEDIA_ROOT/reports/{study.id}/{ts}/qr.png)
-    qr_code_url = None
-    report_dir = None
+    # Build absolute URL for MRI slice image
+    slice_image_url = None
     try:
-        ts = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
-        report_dir = os.path.join(settings.MEDIA_ROOT, "reports", str(study.id), ts)
-        os.makedirs(report_dir, exist_ok=True)
-        study_detail_url = reverse_lazy("tumor:study_detail", kwargs={"pk": study.pk})
-        absolute_study_url = request.build_absolute_uri(study_detail_url)
-        qr_path = os.path.join(report_dir, "qr.png")
-        generate_qr(absolute_study_url, qr_path)
-        qr_code_url = _rel_or_fs_to_abs_url(request, qr_path)
+        if ai_result and getattr(ai_result, "bbox_png", None) and ai_result.bbox_png.name:
+            slice_image_url = request.build_absolute_uri(ai_result.bbox_png.url)
     except Exception:
-        logger.exception("QR generation failed for study %s", study.id)
+        pass
 
-    # Growth prediction (best-effort)
-    pred_vol_30_days = pred_vol_90_days = growth_rate_30_days = sim_vol_post_treatment = None
-    try:
-        from . import ai
-        if ai_result and ai_result.tumor_volume_mm3 is not None:
-            prog = ai.predict_growth_and_simulate(
-                patient_id=study.patient.id,
-                current_volume_mm3=ai_result.tumor_volume_mm3,
-                study_id=study.id,
-            )
-            pred_vol_30_days = prog.get("pred_vol_30_days")
-            pred_vol_90_days = prog.get("pred_vol_90_days")
-            growth_rate_30_days = prog.get("growth_rate_30_days")
-            sim_vol_post_treatment = prog.get("sim_vol_post_treatment")
-    except Exception:
-        logger.exception("Growth prediction failed for study %s", study.id)
+    groq_data = None
+    if ai_result and isinstance(ai_result.volumes_by_group, dict):
+        groq_data = ai_result.volumes_by_group.get("groq_analysis")
 
-    # Slice gallery generation
-    slice_gallery = []
-    try:
-        if report_dir is None:
-            report_dir = os.path.join(settings.MEDIA_ROOT, "reports", str(study.id), datetime.utcnow().strftime("%Y%m%d_%H%M%S"))
-            os.makedirs(report_dir, exist_ok=True)
-
-        nifti_path = study.nifti_file.path if study.nifti_file else None
-        mask_path = ai_result.mask_nifti.path if ai_result and getattr(ai_result, "mask_nifti", None) and getattr(ai_result.mask_nifti, "path", None) else None
-
-        if nifti_path and mask_path:
-            slice_paths = generate_slice_gallery(nifti_path, mask_path, report_dir, n_slices=8)
-            slice_gallery = [_rel_or_fs_to_abs_url(request, p) for p in (slice_paths or [])]
-    except Exception:
-        logger.exception("Slice gallery generation failed for study %s", study.id)
-
-    # 3D preview snapshot
-    preview3d = None
-    try:
-        if mask_path:
-            preview_path = os.path.join(report_dir, "preview3d.png")
-            generate_3d_preview(mask_path, preview_path)
-            preview3d = _rel_or_fs_to_abs_url(request, preview_path)
-    except Exception:
-        logger.exception("3D preview generation failed for study %s", study.id)
-
-    # Render HTML for PDF
     generated_at = timezone.now()
     context = {
         "study": study,
         "ai_result": ai_result,
-        "overlay_url": overlay_url,
-        "grad_cam_url": grad_cam_url,
-        "uncertainty_map_url": uncertainty_map_url,
-        "qr_code_url": qr_code_url,
-        "slice_gallery": slice_gallery,
-        "preview3d": preview3d,
-        "pred_vol_30_days": pred_vol_30_days,
-        "pred_vol_90_days": pred_vol_90_days,
-        "growth_rate_30_days": growth_rate_30_days,
-        "sim_vol_post_treatment": sim_vol_post_treatment,
-        "radiologist_summary": request.POST.get("radiologist_summary") or getattr(study, "radiologist_summary", ""),
-        "now": generated_at,
+        "volume_cm3": volume_cm3,
+        "slice_image_url": slice_image_url,
+        "groq_data": groq_data,
+        "generated_at": generated_at,
+        "base_url": request.build_absolute_uri("/"),
     }
-
-    html_string = render_to_string("tumor/report_v2.0.html", context)
-
-    pdf_io = BytesIO()
-    try:
-        from weasyprint import HTML, CSS
-        html = HTML(string=html_string, base_url=request.build_absolute_uri("/"))
-        css_path = os.path.join(settings.BASE_DIR, "templates", "tumor", "report_v2.css")
-        if os.path.exists(css_path):
-            html.write_pdf(pdf_io, stylesheets=[CSS(filename=css_path)])
-        else:
-            html.write_pdf(pdf_io)
-        pdf_io.seek(0)
-    except Exception:
-        logger.exception("WeasyPrint PDF generation failed for study %s", study.id)
-        return HttpResponseBadRequest("PDF generation failed on server.")
-
-    # Save PDF into storage / update AIResult
-    try:
-        pdf_filename = f"report_{study.id}_{generated_at.strftime('%Y%m%d_%H%M%S')}.pdf"
-        saved_pdf_path = os.path.join(report_dir, pdf_filename)
-        os.makedirs(report_dir, exist_ok=True)
-        with open(saved_pdf_path, "wb") as f:
-            f.write(pdf_io.getbuffer())
-
-        try:
-            saved_pdf_rel = os.path.relpath(saved_pdf_path, settings.MEDIA_ROOT)
-        except Exception:
-            saved_pdf_rel = saved_pdf_path
-
-        saved_pdf_url = _rel_or_fs_to_abs_url(request, saved_pdf_rel)
-
-        ar = getattr(study, "ai_result", None)
-        if ar is None:
-            logger.warning("AIResult not found for study %s; PDF generated but DB fields not updated.", study.pk)
-        else:
-            try:
-                with transaction.atomic():
-                    if hasattr(ar, "report_pdf") and getattr(ar._meta.get_field("report_pdf"), "upload_to", None) is not None:
-                        with open(saved_pdf_path, "rb") as fh:
-                            content = fh.read()
-                        storage_name = f"reports/study_{study.id}/{pdf_filename}"
-                        ar.report_pdf.save(storage_name, ContentFile(content), save=False)
-                        ar.report_generated_at = generated_at
-                        try:
-                            ar.report_pdf_url = default_storage.url(ar.report_pdf.name)
-                        except Exception:
-                            ar.report_pdf_url = _rel_or_fs_to_abs_url(request, ar.report_pdf.name)
-                        ar.save(update_fields=["report_pdf", "report_generated_at", "report_pdf_url"])
-                    else:
-                        ar.report_pdf_url = saved_pdf_url
-                        ar.report_generated_at = generated_at
-                        ar.save(update_fields=["report_pdf_url", "report_generated_at"])
-            except Exception:
-                logger.exception("Failed to save PDF metadata into AIResult for study %s", study.pk)
-    except Exception:
-        logger.exception("Saving PDF failed for study %s", study.id)
-
-    # Return PDF response to user
-    response = HttpResponse(pdf_io.read(), content_type="application/pdf")
-    response["Content-Disposition"] = f'attachment; filename="study_{study.id}_advanced_report.pdf"'
-    return response
+    return render(request, "tumor/report_print.html", context)
 
 
 # ----------------------------

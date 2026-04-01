@@ -1,137 +1,253 @@
 {# templates/tumor/study_detail.html #}
 {% extends "base.html" %}
 {% load static %}
-{% load text_filters %}   {# yangi qatorda #}
-
+{% load text_filters %}
 
 {% block title %}Tekshiruv #{{ study.id }} · BrainWeb{% endblock %}
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <div>
-    <a href="{% url 'tumor:study_list' %}" class="btn btn-link ps-0">← Tekshiruvlarga qaytish</a>
-    <h1 class="h4 mb-0 mt-2">Tekshiruv #{{ study.id }} · {{ study.modality }}</h1>
-    <p class="text-muted mb-0">{{ study.created_at|date:"d.m.Y H:i" }}</p>
-  </div>
-
-  <div class="text-end">
-    {% if ai_result %}
-      <a href="{% url 'tumor:study_report_pdf' study.id %}" class="btn btn-outline-primary btn-sm mb-2">
-        PDF hisobotni yuklab olish
-      </a><br>
-    {% endif %}
-    <span id="studyStatusBadge" class="badge
-      {% if study.status == 'done' %}bg-success
-      {% elif study.status == 'processing' or study.status == 'pending' %}bg-primary
-      {% elif study.status == 'error' %}bg-danger
-      {% else %}bg-secondary
-      {% endif %}">
-      {% if study.status == 'done' %}Tayyor
-      {% elif study.status == 'processing' %}Jarayonda
-      {% elif study.status == 'pending' %}Kutmoqda
-      {% elif study.status == 'error' %}Xatolik
-      {% else %}{{ study.status }}{% endif %}
-    </span>
-  </div>
-</div>
-
-<div class="row g-4">
-
-  <div class="col-lg-4">
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Bemor</h5>
-        <dl class="row mb-0 small">
-          <dt class="col-5 text-muted">Ismi</dt>
-          <dd class="col-7">{{ study.patient.first_name }} {{ study.patient.last_name }}</dd>
-          <dt class="col-5 text-muted">Tug'ilgan sana</dt>
-          <dd class="col-7">
-            {% if study.patient.birth_date %}{{ study.patient.birth_date|date:"d.m.Y" }}{% else %}<span class="text-muted">-</span>{% endif %}
-          </dd>
-          <dt class="col-5 text-muted">ID</dt>
-          <dd class="col-7">{% if study.patient.identifier %}{{ study.patient.identifier }}{% else %}<span class="text-muted">-</span>{% endif %}</dd>
-        </dl>
+{# ===== TOP HEADER BAR ===== #}
+<div class="card border-0 shadow-sm mb-4"
+     style="background: linear-gradient(135deg, #1e3a5f 0%, #4f46e5 100%); color:#fff;">
+  <div class="card-body p-4">
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+      <div>
+        <a href="{% url 'tumor:study_list' %}" class="text-white-50 text-decoration-none small">
+          ← Tekshiruvlar
+        </a>
+        <h1 class="h3 mb-1 mt-1">Tekshiruv #{{ study.id }} · {{ study.modality }}</h1>
+        <p class="mb-0" style="opacity:.8;">
+          {{ study.patient.first_name }} {{ study.patient.last_name }}
+          &nbsp;·&nbsp; {{ study.created_at|date:"d.m.Y H:i" }}
+        </p>
       </div>
-    </div>
-
-    <div class="card mb-3">
-      <div class="card-body">
-        <h5 class="card-title mb-3">Tekshiruv ma'lumotlari</h5>
-        <dl class="row mb-0 small">
-          <dt class="col-5 text-muted">Turi</dt><dd class="col-7">{{ study.modality }}</dd>
-          <dt class="col-5 text-muted">Fayl</dt>
-          <dd class="col-7 text-truncate" title="{{ study.uploaded_file.name }}">{{ study.uploaded_file.name }}</dd>
-          {% if study.nifti_file %}
-            <dt class="col-5 text-muted">NIfTI</dt>
-            <dd class="col-7 text-truncate" title="{{ study.nifti_file.name }}">{{ study.nifti_file.name }}</dd>
-          {% endif %}
-        </dl>
-        {% if study.status == "error" and study.error_message %}
-          <div class="alert alert-danger mt-3 small mb-0"><strong>Xatolik:</strong><br><code>{{ study.error_message }}</code></div>
+      <div class="d-flex flex-column align-items-end gap-2">
+        <span id="studyStatusBadge" class="badge fs-6 px-3 py-2
+          {% if study.status == 'done' %}bg-success
+          {% elif study.status == 'processing' or study.status == 'pending' %}bg-warning text-dark
+          {% elif study.status == 'error' %}bg-danger
+          {% else %}bg-secondary{% endif %}">
+          {% if study.status == 'done' %}✓ Tayyor
+          {% elif study.status == 'processing' %}⟳ Tahlil qilinmoqda...
+          {% elif study.status == 'pending' %}⏳ Kutmoqda
+          {% elif study.status == 'error' %}✕ Xatolik
+          {% else %}{{ study.status }}{% endif %}
+        </span>
+        {% if ai_result %}
+          <a href="{% url 'tumor:study_report_pdf' study.id %}?autoprint=1" target="_blank"
+             class="btn btn-light btn-sm">
+            🖨 PDF hisobotni yuklab olish
+          </a>
         {% endif %}
       </div>
     </div>
   </div>
+</div>
 
-  <div class="col-lg-8">
-
-    {# 1. 3D VIEWER CARD #}
-    {% if tumor_mesh_url %}
-      <div class="card mb-3">
-        <div class="card-body">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <h5 class="card-title mb-0">3D O'sima modeli</h5>
-            <span class="badge bg-light text-muted border small">WebGL · Interaktiv</span>
-          </div>
-          <div class="d-flex gap-3 align-items-center mb-2 small">
-            <div class="d-flex align-items-center gap-2">
-              <span class="text-muted">Shaffoflik</span>
-              <input type="range" id="meshOpacityRange" min="0" max="1" step="0.01" value="0.9" style="width: 140px;">
-              <span id="meshOpacityLabel" class="text-muted">0.90</span>
-            </div>
-            <div class="form-check form-switch ms-2">
-              <input class="form-check-input" type="checkbox" id="showWireframe">
-              <label class="form-check-label small" for="showWireframe">To'r ko'rinish</label>
-            </div>
-          </div>
-          <div id="tumor3dContainer" class="border rounded position-relative bg-black" style="height:420px; min-height:320px; overflow:hidden;">
-            <div id="tumor3dFallback" class="position-absolute top-50 start-50 translate-middle text-muted small">Model yuklanmoqda...</div>
-          </div>
-          <div class="mt-2 text-end">
-            <a href="{{ tumor_mesh_url }}" target="_blank" class="small text-decoration-none">Mesh JSON yuklab olish</a>
-          </div>
+{# ===== AI RESULT BANNER ===== #}
+{% with g=ai_result.volumes_by_group.groq_analysis %}
+{% if g %}
+  {% if g.tumor_detected %}
+    <div class="alert border-0 shadow-sm mb-4 py-3 px-4 d-flex align-items-center gap-3"
+         style="background: linear-gradient(135deg,#fff5f5,#fef2f2); border-left: 5px solid #ef4444 !important; border-radius:12px;">
+      <span style="font-size:2.2rem;">⚠️</span>
+      <div class="flex-grow-1">
+        <div class="fw-bold fs-6 text-danger">O'sima aniqlandi</div>
+        <div class="small text-muted mt-1">
+          {% if g.severity == "high" %}<span class="badge bg-danger">Jiddiy daraja</span>
+          {% elif g.severity == "moderate" %}<span class="badge bg-warning text-dark">O'rtacha daraja</span>
+          {% elif g.severity == "low" %}<span class="badge bg-success">Past daraja</span>
+          {% endif %}
+          {% if ai_result.predicted_class %}
+            <span class="badge bg-secondary ms-1">{{ ai_result.predicted_class }}</span>
+          {% endif %}
+          {% if ai_result.predicted_confidence %}
+            <span class="ms-2 text-muted">Ishonch: <strong>{{ ai_result.predicted_confidence|floatformat:0 }}%</strong></span>
+          {% endif %}
         </div>
       </div>
+      <div class="text-end small text-muted d-none d-md-block">Klinik tasdiqlash tavsiya etiladi</div>
+    </div>
+  {% else %}
+    <div class="alert border-0 shadow-sm mb-4 py-3 px-4 d-flex align-items-center gap-3"
+         style="background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-left: 5px solid #22c55e !important; border-radius:12px;">
+      <span style="font-size:2.2rem;">✅</span>
+      <div class="flex-grow-1">
+        <div class="fw-bold fs-6 text-success">O'sima belgilari aniqlanmadi</div>
+        <div class="small text-muted mt-1">AI tahlili normal ko'rsatdi</div>
+      </div>
+    </div>
+  {% endif %}
+{% endif %}
+{% endwith %}
+
+{# ===== MAIN GRID ===== #}
+<div class="row g-4">
+
+  {# ---- LEFT COLUMN ---- #}
+  <div class="col-lg-4">
+
+    {# Patient Card #}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title fw-semibold mb-3">
+          <span class="me-2">👤</span>Bemor
+        </h5>
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted fw-normal">Ismi</dt>
+          <dd class="col-7 fw-semibold">{{ study.patient.first_name }} {{ study.patient.last_name }}</dd>
+          <dt class="col-5 text-muted fw-normal">Tug'ilgan sana</dt>
+          <dd class="col-7">
+            {% if study.patient.birth_date %}{{ study.patient.birth_date|date:"d.m.Y" }}
+            {% else %}<span class="text-muted">—</span>{% endif %}
+          </dd>
+          <dt class="col-5 text-muted fw-normal">Klinika ID</dt>
+          <dd class="col-7">{{ study.patient.identifier|default:"—" }}</dd>
+        </dl>
+      </div>
+    </div>
+
+    {# Study info card #}
+    <div class="card border-0 shadow-sm mb-3">
+      <div class="card-body">
+        <h5 class="card-title fw-semibold mb-3">
+          <span class="me-2">📋</span>Tekshiruv
+        </h5>
+        <dl class="row mb-0 small">
+          <dt class="col-5 text-muted fw-normal">Turi</dt>
+          <dd class="col-7"><span class="badge bg-light text-dark border">{{ study.modality }}</span></dd>
+          <dt class="col-5 text-muted fw-normal">Holati</dt>
+          <dd class="col-7">
+            {% if study.status == "done" %}<span class="badge bg-success-subtle text-success border">✓ Tayyor</span>
+            {% elif study.status == "error" %}<span class="badge bg-danger-subtle text-danger border">✕ Xatolik</span>
+            {% elif study.status == "processing" %}<span class="badge bg-primary-subtle text-primary border">⟳ Jarayonda</span>
+            {% else %}<span class="badge bg-secondary-subtle text-secondary border">{{ study.status }}</span>
+            {% endif %}
+          </dd>
+          {% if study.description %}
+          <dt class="col-5 text-muted fw-normal mt-2">Tavsif</dt>
+          <dd class="col-7 mt-2 text-truncate" title="{{ study.description }}">"{{ study.description }}"</dd>
+          {% endif %}
+          <dt class="col-5 text-muted fw-normal mt-2">Fayl</dt>
+          <dd class="col-7 mt-2 text-truncate small text-muted" title="{{ study.uploaded_file.name }}">
+            {{ study.uploaded_file.name }}
+          </dd>
+        </dl>
+        {% if study.status == "error" and study.error_message %}
+          <div class="alert alert-danger mt-3 small mb-0 p-2">
+            <strong>Xatolik:</strong><br>
+            <code class="small">{{ study.error_message }}</code>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Quick metrics card (if ai_result) #}
+    {% if ai_result %}
+    <div class="card border-0 shadow-sm mb-3"
+         style="background: linear-gradient(135deg,#f8faff,#eff4ff);">
+      <div class="card-body">
+        <h5 class="card-title fw-semibold mb-3">
+          <span class="me-2">📊</span>Ko'rsatkichlar
+        </h5>
+        <div class="row g-2">
+          <div class="col-6">
+            <div class="p-2 bg-white rounded border text-center">
+              <div class="small text-muted">O'sima turi</div>
+              <div class="fw-bold mt-1" style="font-size:.85rem;">{{ ai_result.predicted_class|default:"—" }}</div>
+            </div>
+          </div>
+          <div class="col-6">
+            <div class="p-2 bg-white rounded border text-center">
+              <div class="small text-muted">Ishonch</div>
+              <div class="fw-bold mt-1 text-primary">
+                {% if ai_result.predicted_confidence %}{{ ai_result.predicted_confidence|floatformat:0 }}%{% else %}—{% endif %}
+              </div>
+            </div>
+          </div>
+          {% if volume_cm3 %}
+          <div class="col-12">
+            <div class="p-2 bg-white rounded border text-center">
+              <div class="small text-muted">Taxminiy hajm</div>
+              <div class="fw-bold mt-1 text-indigo" style="color:#4f46e5;">
+                {{ volume_cm3|floatformat:2 }} cm³
+                <span class="text-muted small fw-normal">({{ ai_result.tumor_volume_mm3|floatformat:0 }} mm³)</span>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
     {% endif %}
 
-    {# 2. 2D KESIM KO'RUVCHI #}
-    <div class="card mb-3">
+  </div>{# /col-lg-4 #}
+
+  {# ---- RIGHT COLUMN ---- #}
+  <div class="col-lg-8">
+
+    {# 3D viewer #}
+    {% if tumor_mesh_url %}
+    <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="card-title mb-0">AI Tasvir tahlili (2D kesimlar)</h5>
+          <h5 class="card-title fw-semibold mb-0">🧊 3D O'sima modeli</h5>
+          <span class="badge bg-light text-muted border small">WebGL · Interaktiv</span>
+        </div>
+        <div class="d-flex gap-3 align-items-center mb-2 small">
+          <span class="text-muted">Shaffoflik</span>
+          <input type="range" id="meshOpacityRange" min="0" max="1" step="0.01" value="0.9" style="width:140px;">
+          <span id="meshOpacityLabel" class="text-muted">0.90</span>
+          <div class="form-check form-switch ms-2 mb-0">
+            <input class="form-check-input" type="checkbox" id="showWireframe">
+            <label class="form-check-label small" for="showWireframe">To'r ko'rinish</label>
+          </div>
+        </div>
+        <div id="tumor3dContainer" class="border rounded position-relative bg-black" style="height:380px; overflow:hidden;">
+          <div id="tumor3dFallback" class="position-absolute top-50 start-50 translate-middle text-muted small">Model yuklanmoqda...</div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
+    {# MRI Slices viewer #}
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h5 class="card-title fw-semibold mb-0">🔬 MRI Tasvirlar</h5>
           {% if ai_result and ai_result.mask_nifti %}
-             <a href="{{ ai_result.mask_nifti.url }}" class="btn btn-outline-secondary btn-sm">Maskni yuklab olish</a>
+            <a href="{{ ai_result.mask_nifti.url }}" class="btn btn-outline-secondary btn-sm">
+              Maskni yuklab olish
+            </a>
           {% endif %}
         </div>
 
         {% if orig_slice_urls and overlay_slice_urls %}
-          <div class="mb-2 d-flex align-items-center">
-            <input type="range" class="form-range flex-grow-1 me-3" id="sliceRange" min="0" max="{{ overlay_slice_urls|length|add:'-1' }}" value="0">
-            <span class="small text-muted" style="min-width: 60px; text-align: right;" id="sliceIndexLabel">1 / {{ overlay_slice_urls|length }}</span>
+          <div class="mb-3 d-flex align-items-center gap-3">
+            <span class="small text-muted">Kesim:</span>
+            <input type="range" class="form-range flex-grow-1" id="sliceRange"
+                   min="0" max="{{ overlay_slice_urls|length|add:'-1' }}" value="0">
+            <span class="badge bg-light text-muted border" id="sliceIndexLabel">
+              1 / {{ overlay_slice_urls|length }}
+            </span>
           </div>
-
-          <div class="row g-2">
-            <div class="col-md-6 text-center">
-              <img id="origSliceImg" src="{{ orig_slice_urls.0 }}" class="img-fluid rounded border bg-dark" style="max-height:280px;">
-              <div class="small text-muted mt-1">Original</div>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="p-1 bg-black rounded">
+                <img id="origSliceImg" src="{{ orig_slice_urls.0 }}"
+                     class="img-fluid rounded w-100" style="max-height:260px; object-fit:contain;">
+              </div>
+              <div class="small text-muted text-center mt-1">Original</div>
             </div>
-            <div class="col-md-6 text-center">
-              <img id="overlaySliceImg" src="{{ overlay_slice_urls.0 }}" class="img-fluid rounded border bg-dark" style="max-height:280px;">
-              <div class="small text-muted mt-1">AI Overlay</div>
+            <div class="col-md-6">
+              <div class="p-1 bg-black rounded">
+                <img id="overlaySliceImg" src="{{ overlay_slice_urls.0 }}"
+                     class="img-fluid rounded w-100" style="max-height:260px; object-fit:contain;">
+              </div>
+              <div class="small text-muted text-center mt-1">AI Overlay</div>
             </div>
           </div>
-
           <script>
             (function() {
               const origSlices = {{ orig_slice_urls|safe }};
@@ -140,14 +256,13 @@
               const origImg = document.getElementById('origSliceImg');
               const overlayImg = document.getElementById('overlaySliceImg');
               const labelEl = document.getElementById('sliceIndexLabel');
-
               if (rangeEl && origImg) {
                 rangeEl.addEventListener('input', function() {
                   const idx = parseInt(this.value);
                   if (origSlices[idx]) {
                     origImg.src = origSlices[idx];
                     overlayImg.src = overlaySlices[idx];
-                    labelEl.textContent = (idx + 1) + ' / ' + overlaySlices.length;
+                    labelEl.textContent = (idx+1) + ' / ' + overlaySlices.length;
                   }
                 });
               }
@@ -155,146 +270,145 @@
           </script>
 
         {% elif ai_result and ai_result.bbox_png %}
-          <div class="text-center">
-            <img src="{{ ai_result.bbox_png.url }}" class="img-fluid rounded border" style="max-height:260px; width:100%;">
-            <div class="small text-muted mt-1">Axial · Coronal · Sagittal (Groq tahlili uchun kesimlar)</div>
+          <div class="bg-black rounded p-2 text-center">
+            <img src="{{ ai_result.bbox_png.url }}" class="img-fluid rounded"
+                 style="max-height:280px; width:100%; object-fit:contain;">
+          </div>
+          <div class="small text-muted text-center mt-2">
+            Axial · Coronal · Sagittal &nbsp;—&nbsp; Groq AI tahlili uchun kesimlar
           </div>
         {% else %}
-          <p class="text-muted mb-0"><em>Hali natija yo'q.</em></p>
+          <div class="text-center text-muted py-4">
+            <div style="font-size:2.5rem;">🩻</div>
+            <p class="mt-2 mb-0 small">Tasvir hali mavjud emas.</p>
+          </div>
         {% endif %}
       </div>
     </div>
 
-    {# 3. ANALYSIS RESULTS #}
+    {# ===== AI ANALYSIS RESULTS ===== #}
     {% if ai_result %}
-
-      {# Groq tahlili natijasi #}
       {% with g=ai_result.volumes_by_group.groq_analysis %}
       {% if g %}
-        {% if g.tumor_detected %}
-          <div class="alert alert-danger border-0 shadow-sm mb-3 d-flex align-items-center gap-3">
-            <span style="font-size:2rem;">🧠</span>
-            <div>
-              <strong>O'sima aniqlandi</strong>
-              <div class="small mt-1">
-                {% if g.severity == "high" %}Jiddiy daraja{% elif g.severity == "moderate" %}O'rtacha daraja{% elif g.severity == "low" %}Past daraja{% endif %}
-                {% if ai_result.predicted_class %} · <span class="badge bg-danger">{{ ai_result.predicted_class }}</span>{% endif %}
-                {% if ai_result.predicted_confidence %} · Ishonch: {{ ai_result.predicted_confidence|floatformat:0 }}%{% endif %}
-              </div>
-            </div>
-          </div>
-        {% else %}
-          <div class="alert alert-success border-0 shadow-sm mb-3 d-flex align-items-center gap-3">
-            <span style="font-size:2rem;">✅</span>
-            <div>
-              <strong>O'sima aniqlanmadi</strong>
-              <div class="small mt-1 text-muted">AI tahlili normal ko'rsatdi</div>
-            </div>
-          </div>
-        {% endif %}
-
-        <div class="card mb-3">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="card-title mb-0">AI Tahlil Natijasi</h5>
-              <span class="badge bg-light text-muted border small">Groq Llama 4 Vision</span>
-            </div>
-
-            <div class="row g-3 small mb-3">
-              <div class="col-6 col-md-3">
-                <div class="text-muted mb-1">Holat</div>
-                {% if g.tumor_detected %}
-                  <span class="badge bg-danger fs-6">O'sima bor</span>
-                {% else %}
-                  <span class="badge bg-success fs-6">Normal</span>
-                {% endif %}
-              </div>
-              <div class="col-6 col-md-3">
-                <div class="text-muted mb-1">Turi</div>
-                <div class="fw-bold">{{ ai_result.predicted_class|default:"-" }}</div>
-              </div>
-              <div class="col-6 col-md-3">
-                <div class="text-muted mb-1">Hajm (taxmin)</div>
-                {% if ai_result.tumor_volume_mm3 %}
-                  <div class="fw-bold">{{ volume_cm3|floatformat:1 }} cm³</div>
-                {% else %}
-                  <div class="text-muted">-</div>
-                {% endif %}
-              </div>
-              <div class="col-6 col-md-3">
-                <div class="text-muted mb-1">Joylashuv</div>
-                <div class="fw-bold">{{ g.location|default:"-" }}</div>
-              </div>
-            </div>
-
-            {% if g.findings %}
-              <div class="mb-3">
-                <div class="text-muted small mb-1">Radiologik topilmalar</div>
-                <div class="p-3 bg-light rounded small">{{ g.findings }}</div>
-              </div>
-            {% endif %}
-
-            {% if g.recommendation %}
-              <div>
-                <div class="text-muted small mb-1">Tavsiya</div>
-                <div class="p-3 border border-primary rounded small text-primary">{{ g.recommendation }}</div>
-              </div>
-            {% endif %}
-
-            {% if g.model %}
-              <div class="mt-3 text-end">
-                <span class="text-muted" style="font-size:0.7rem;">Tahlil: {{ g.model }}</span>
-              </div>
-            {% endif %}
-          </div>
-        </div>
-      {% endif %}
-      {% endwith %}
-
-      {# Oddiy metrikalar #}
-      {% if ai_result.tumor_volume_mm3 or ai_result.tumor_max_diameter_mm %}
-      <div class="card">
+      <div class="card border-0 shadow-sm mb-4">
         <div class="card-body">
-          <h5 class="card-title mb-3">O'lchovlar</h5>
-          <div class="row small">
-            <div class="col-6">
-              <div class="text-muted">Hajm (taxmin)</div>
-              <div class="fw-bold fs-5">{{ volume_cm3|floatformat:2 }} cm³</div>
-              <span class="text-muted">{{ ai_result.tumor_volume_mm3|floatformat:0 }} mm³</span>
-            </div>
-            {% if ai_result.predicted_confidence %}
-            <div class="col-6">
-              <div class="text-muted">Ishonch darajasi</div>
-              <div class="fw-bold fs-5">{{ ai_result.predicted_confidence|floatformat:0 }}%</div>
-            </div>
-            {% endif %}
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title fw-semibold mb-0">🤖 AI Tahlil Natijasi</h5>
+            <span class="badge bg-light text-muted border small">Groq · Llama 4 Vision</span>
           </div>
+
+          {# Metrics row #}
+          <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+              <div class="rounded-3 p-3 text-center h-100"
+                   style="background:{% if g.tumor_detected %}#fef2f2{% else %}#f0fdf4{% endif %}; border:1px solid {% if g.tumor_detected %}#fca5a5{% else %}#86efac{% endif %};">
+                <div class="small text-muted mb-1">Holat</div>
+                {% if g.tumor_detected %}
+                  <div class="fw-bold text-danger">O'sima bor</div>
+                {% else %}
+                  <div class="fw-bold text-success">Normal</div>
+                {% endif %}
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="rounded-3 p-3 text-center h-100 bg-light border">
+                <div class="small text-muted mb-1">Turi</div>
+                <div class="fw-bold" style="font-size:.88rem;">{{ ai_result.predicted_class|default:"—" }}</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="rounded-3 p-3 text-center h-100 bg-light border">
+                <div class="small text-muted mb-1">Joylashuv</div>
+                <div class="fw-bold" style="font-size:.85rem;">{{ g.location|default:"—" }}</div>
+              </div>
+            </div>
+            <div class="col-6 col-md-3">
+              <div class="rounded-3 p-3 text-center h-100 bg-light border">
+                <div class="small text-muted mb-1">Ishonch</div>
+                <div class="fw-bold text-primary">
+                  {% if ai_result.predicted_confidence %}{{ ai_result.predicted_confidence|floatformat:0 }}%
+                  {% else %}—{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {# Findings #}
+          {% if g.findings %}
+          <div class="mb-3">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-secondary-subtle text-secondary border small">Radiologik topilmalar</span>
+            </div>
+            <div class="p-3 rounded-3 border" style="background:#f8fafc; font-size:.88rem; line-height:1.7; color:#374151; white-space:pre-line;">{{ g.findings }}</div>
+          </div>
+          {% endif %}
+
+          {# Recommendation #}
+          {% if g.recommendation %}
+          <div class="mb-2">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <span class="badge bg-primary-subtle text-primary border small">Tavsiyalar</span>
+            </div>
+            <div class="p-3 rounded-3 border" style="background:#eff6ff; border-color:#bfdbfe !important; font-size:.88rem; line-height:1.7; color:#1e40af; white-space:pre-line;">
+              💡 {{ g.recommendation }}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if g.model %}
+          <div class="mt-3 text-end">
+            <span class="text-muted" style="font-size:.7rem;">AI modeli: {{ g.model }}</span>
+          </div>
+          {% endif %}
         </div>
       </div>
       {% endif %}
+      {% endwith %}
 
+      {# Disclaimer #}
+      <div class="alert border-0 mb-4 small"
+           style="background:#fffbeb; border-left:4px solid #f59e0b !important; border-radius:8px; color:#78350f;">
+        <strong>⚠️ Eslatma:</strong>
+        Ushbu tahlil AI tomonidan avtomatik yaratilgan va faqat dastlabki ma'lumot sifatida xizmat qiladi.
+        Yakuniy klinik xulosa malakali shifokor tomonidan aniqlanishi shart.
+      </div>
+
+    {% elif study.status == "processing" or study.status == "pending" %}
+      <div class="card border-0 shadow-sm mb-4">
+        <div class="card-body text-center py-5">
+          <div class="brain-loader mx-auto mb-3">
+            <div class="brain-loader-orbit">
+              <div class="brain-loader-emoji">🧠</div>
+              <div class="brain-loader-dot"></div>
+            </div>
+          </div>
+          <p class="fw-semibold mt-3 mb-1">AI tahlil jarayonda...</p>
+          <p class="text-muted small mb-0">Sahifa avtomatik yangilanadi.</p>
+        </div>
+      </div>
     {% endif %}
 
-  </div>
+  </div>{# /col-lg-8 #}
 </div>
 
+{# ===== STATUS POLLING ===== #}
 <script>
   (function() {
-    const statusBadge = document.getElementById("studyStatusBadge");
-    if (!statusBadge) return;
-
-    // Agar status DONE yoki ERROR bo'lsa, polling shart emas
-    const text = statusBadge.textContent.trim().toLowerCase();
-    if (text === 'done' || text === 'error') return;
-
-    const interval = setInterval(() => {
-      fetch("{% url 'tumor:study_status_api' study.id %}", {headers:{"X-Requested-With":"XMLHttpRequest"}})
-        .then(r => r.json())
-        .then(data => {
-          if (data.status && data.status !== "{{ study.status }}") {
-             window.location.reload(); // Status o'zgarganda sahifani yangilash
-          }
-        }).catch(()=>{/*ignore*/});
+    const badge = document.getElementById("studyStatusBadge");
+    if (!badge) return;
+    const text = badge.textContent.trim();
+    if (text.includes('Tayyor') || text.includes('Xatolik')) return;
+    setInterval(function() {
+      fetch("{% url 'tumor:study_status_api' study.id %}", {
+        headers: {"X-Requested-With": "XMLHttpRequest"}
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.status === 'done' || data.status === 'error') {
+          window.location.reload();
+        }
+      })
+      .catch(function(){});
     }, 5000);
   })();
 </script>
@@ -303,128 +417,56 @@
 <script type="module">
   import * as THREE from 'three';
   import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
   const container = document.getElementById('tumor3dContainer');
   const fallback = document.getElementById('tumor3dFallback');
   const meshUrl = "{{ tumor_mesh_url|escapejs }}";
+  if (!container || !meshUrl) return;
 
-  if (container && meshUrl) {
-    init3DViewer();
-  }
-
-  function init3DViewer() {
-    const width = container.clientWidth || 800;
-    const height = container.clientHeight || 360;
-
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111116);
-
-    const camera = new THREE.PerspectiveCamera(45, width / height, 0.1, 1000);
-    camera.position.set(0, 0, 100);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
-    container.appendChild(renderer.domElement);
-
-    scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(5, 10, 7);
-    scene.add(dirLight);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-
-    let meshObject = null;
-    let material = null;
-
-    fetch(meshUrl)
-      .then(res => res.json())
-      .then(json => {
-        if (!json.vertices) throw new Error("No vertices found");
-
-        // build geometry
-        const vertices = new Float32Array(json.vertices.flat());
-        const geometry = new THREE.BufferGeometry();
-        geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
-
-        if (json.faces && json.faces.length > 0) {
-           const indices = json.vertices.length > 65535
-               ? new Uint32Array(json.faces.flat())
-               : new Uint16Array(json.faces.flat());
-           geometry.setIndex(new THREE.BufferAttribute(indices, 1));
-           geometry.computeVertexNormals();
-           geometry.computeBoundingSphere();
-           material = new THREE.MeshStandardMaterial({
-             color: 0xff4d4d,
-             roughness: 0.5,
-             metalness: 0.1,
-             transparent: true,
-             opacity: 0.9,
-             side: THREE.DoubleSide
-           });
-           meshObject = new THREE.Mesh(geometry, material);
-        } else {
-           geometry.computeBoundingSphere();
-           material = new THREE.PointsMaterial({ size: 0.5, color: 0xff4d4d });
-           meshObject = new THREE.Points(geometry, material);
-        }
-
-        if (geometry.boundingSphere) {
-           const c = geometry.boundingSphere.center;
-           const r = geometry.boundingSphere.radius;
-           geometry.translate(-c.x, -c.y, -c.z);
-           camera.position.set(0, 0, r * 2.5);
-           controls.target.set(0, 0, 0);
-        }
-
-        scene.add(meshObject);
-        if (fallback) fallback.style.display = 'none';
-        animate();
-      })
-      .catch(err => {
-        console.error("3D Error:", err);
-        if (fallback) {
-          fallback.textContent = "Error loading 3D model.";
-          fallback.className = "position-absolute top-50 start-50 translate-middle text-danger small";
-        }
-      });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x111116);
+  const w = container.clientWidth || 800, h = container.clientHeight || 360;
+  const camera = new THREE.PerspectiveCamera(45, w/h, 0.1, 1000);
+  camera.position.set(0, 0, 100);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(w, h);
+  renderer.setPixelRatio(window.devicePixelRatio);
+  container.appendChild(renderer.domElement);
+  scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+  const dl = new THREE.DirectionalLight(0xffffff, 0.8);
+  dl.position.set(5,10,7); scene.add(dl);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.05;
+  let meshObj = null, mat = null;
+  fetch(meshUrl).then(r=>r.json()).then(json => {
+    if (!json.vertices) throw new Error('No vertices');
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(json.vertices.flat()), 3));
+    if (json.faces && json.faces.length) {
+      geo.setIndex(new THREE.BufferAttribute(
+        json.vertices.length > 65535 ? new Uint32Array(json.faces.flat()) : new Uint16Array(json.faces.flat()), 1));
+      geo.computeVertexNormals(); geo.computeBoundingSphere();
+      mat = new THREE.MeshStandardMaterial({color:0xff4d4d,roughness:.5,metalness:.1,transparent:true,opacity:.9,side:THREE.DoubleSide});
+      meshObj = new THREE.Mesh(geo, mat);
+    } else {
+      geo.computeBoundingSphere();
+      mat = new THREE.PointsMaterial({size:.5,color:0xff4d4d});
+      meshObj = new THREE.Points(geo, mat);
     }
-
-    const opRange = document.getElementById('meshOpacityRange');
-    const opLabel = document.getElementById('meshOpacityLabel');
-    const wireCheck = document.getElementById('showWireframe');
-
-    if (opRange && opLabel) {
-      opRange.addEventListener('input', (e) => {
-         const val = parseFloat(e.target.value);
-         opLabel.textContent = val.toFixed(2);
-         if (material) material.opacity = val;
-      });
+    if (geo.boundingSphere) {
+      const c = geo.boundingSphere.center, r = geo.boundingSphere.radius;
+      geo.translate(-c.x,-c.y,-c.z);
+      camera.position.set(0,0,r*2.5); controls.target.set(0,0,0);
     }
+    scene.add(meshObj);
+    if (fallback) fallback.style.display='none';
+    (function animate(){ requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera); })();
+  }).catch(e => { if(fallback){fallback.textContent='3D model yuklanmadi.'; fallback.className='position-absolute top-50 start-50 translate-middle text-danger small';} });
 
-    if (wireCheck) {
-      wireCheck.addEventListener('change', (e) => {
-         if (material && material.isMeshStandardMaterial) {
-            material.wireframe = e.target.checked;
-         }
-      });
-    }
-
-    window.addEventListener('resize', () => {
-       const w = container.clientWidth;
-       const h = container.clientHeight;
-       camera.aspect = w / h;
-       camera.updateProjectionMatrix();
-       renderer.setSize(w, h);
-    });
-  }
+  const opR = document.getElementById('meshOpacityRange'), opL = document.getElementById('meshOpacityLabel');
+  if(opR) opR.addEventListener('input', e=>{const v=parseFloat(e.target.value); if(opL)opL.textContent=v.toFixed(2); if(mat)mat.opacity=v;});
+  const wf = document.getElementById('showWireframe');
+  if(wf) wf.addEventListener('change', e=>{if(mat&&mat.isMeshStandardMaterial)mat.wireframe=e.target.checked;});
+  window.addEventListener('resize',()=>{const nw=container.clientWidth,nh=container.clientHeight; camera.aspect=nw/nh; camera.updateProjectionMatrix(); renderer.setSize(nw,nh);});
 </script>
 {% endif %}
 
