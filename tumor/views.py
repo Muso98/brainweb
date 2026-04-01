@@ -281,9 +281,17 @@ def _handle_study_upload(request, form):
         )
         logger.info("[UPLOAD] AIResult #%s saqlandi", ai_result.pk)
 
-        # 7. Kesim rasmlari saqlash
+        # 7. Kesim rasmlari saqlash (o'sma koordinatalari bilan)
         try:
-            slices_path = save_slices_png(preprocessed_nifti, study.id)
+            slices_path = save_slices_png(
+                preprocessed_nifti,
+                study.id,
+                tumor_detected=bool(groq_result.get("tumor_detected")),
+                tumor_cx=groq_result.get("tumor_cx"),
+                tumor_cy=groq_result.get("tumor_cy"),
+                tumor_cx_cor=groq_result.get("tumor_cx_cor"),
+                tumor_cy_cor=groq_result.get("tumor_cy_cor"),
+            )
             if slices_path:
                 ai_result.bbox_png.name = os.path.relpath(slices_path, settings.MEDIA_ROOT)
                 ai_result.save(update_fields=["bbox_png"])
