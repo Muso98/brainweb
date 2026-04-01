@@ -261,7 +261,7 @@
     <div class="status-banner detected">
       <span class="icon">⚠️</span>
       <div>
-        O'sima aniqlandi
+        O'sma aniqlandi
         {% if groq_data.severity %}
           &nbsp;·&nbsp;
           <span class="severity {{ groq_data.severity }}">
@@ -277,7 +277,7 @@
     <div class="status-banner normal">
       <span class="icon">✅</span>
       <div>
-        O'sima belgilari aniqlanmadi
+        O'sma belgilari aniqlanmadi
         <div class="sub">AI tahlili normal ko'rsatdi — klinik tekshiruvni davom ettiring</div>
       </div>
     </div>
@@ -339,14 +339,14 @@
         <div class="metric-card">
           <div class="m-label">Holat</div>
           {% if groq_data and groq_data.tumor_detected %}
-            <div class="m-value" style="color:#dc2626; font-size:1.1rem;">O'sima bor</div>
+            <div class="m-value" style="color:#dc2626; font-size:1.1rem;">O'sma bor</div>
           {% else %}
             <div class="m-value" style="color:#16a34a; font-size:1.1rem;">Normal</div>
           {% endif %}
           <div class="m-unit">AI xulosasi</div>
         </div>
         <div class="metric-card">
-          <div class="m-label">O'sima turi</div>
+          <div class="m-label">O'sma turi</div>
           <div class="m-value" style="font-size:0.95rem;">{{ ai_result.predicted_class|default:"—" }}</div>
           <div class="m-unit">AI tasniflash</div>
         </div>
@@ -403,7 +403,7 @@
 
     {% if groq_data.location %}
     <div class="section">
-      <div class="section-title">O'sima joylashuvi</div>
+      <div class="section-title">O'sma joylashuvi</div>
       <div class="info-cell" style="max-width: 320px;">
         <div class="label">Joylashuv</div>
         <div class="value">{{ groq_data.location }}</div>

@@ -53,7 +53,7 @@
          style="background: linear-gradient(135deg,#fff5f5,#fef2f2); border-left: 5px solid #ef4444 !important; border-radius:12px;">
       <span style="font-size:2.2rem;">⚠️</span>
       <div class="flex-grow-1">
-        <div class="fw-bold fs-6 text-danger">O'sima aniqlandi</div>
+        <div class="fw-bold fs-6 text-danger">O'sma aniqlandi</div>
         <div class="small text-muted mt-1">
           {% if g.severity == "high" %}<span class="badge bg-danger">Jiddiy daraja</span>
           {% elif g.severity == "moderate" %}<span class="badge bg-warning text-dark">O'rtacha daraja</span>
@@ -74,7 +74,7 @@
          style="background: linear-gradient(135deg,#f0fdf4,#dcfce7); border-left: 5px solid #22c55e !important; border-radius:12px;">
       <span style="font-size:2.2rem;">✅</span>
       <div class="flex-grow-1">
-        <div class="fw-bold fs-6 text-success">O'sima belgilari aniqlanmadi</div>
+        <div class="fw-bold fs-6 text-success">O'sma belgilari aniqlanmadi</div>
         <div class="small text-muted mt-1">AI tahlili normal ko'rsatdi</div>
       </div>
     </div>
@@ -154,7 +154,7 @@
         <div class="row g-2">
           <div class="col-6">
             <div class="p-2 bg-white rounded border text-center">
-              <div class="small text-muted">O'sima turi</div>
+              <div class="small text-muted">O'sma turi</div>
               <div class="fw-bold mt-1" style="font-size:.85rem;">{{ ai_result.predicted_class|default:"—" }}</div>
             </div>
           </div>
@@ -192,7 +192,7 @@
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
         <div class="d-flex justify-content-between align-items-center mb-2">
-          <h5 class="card-title fw-semibold mb-0">🧊 3D O'sima modeli</h5>
+          <h5 class="card-title fw-semibold mb-0">🧊 3D O'sma modeli</h5>
           <span class="badge bg-light text-muted border small">WebGL · Interaktiv</span>
         </div>
         <div class="d-flex gap-3 align-items-center mb-2 small">
@@ -304,7 +304,7 @@
                    style="background:{% if g.tumor_detected %}#fef2f2{% else %}#f0fdf4{% endif %}; border:1px solid {% if g.tumor_detected %}#fca5a5{% else %}#86efac{% endif %};">
                 <div class="small text-muted mb-1">Holat</div>
                 {% if g.tumor_detected %}
-                  <div class="fw-bold text-danger">O'sima bor</div>
+                  <div class="fw-bold text-danger">O'sma bor</div>
                 {% else %}
                   <div class="fw-bold text-success">Normal</div>
                 {% endif %}
