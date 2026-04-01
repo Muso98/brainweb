@@ -7,11 +7,8 @@ import os
 import io
 import re
 import json
-import uuid
 import base64
 import logging
-import urllib.request
-import urllib.error
 from typing import Optional, Dict, Any
 
 import nibabel as nib
@@ -156,28 +153,30 @@ def analyze_study(nifti_path: str, modality: str = "MRI") -> Dict[str, Any]:
             "image_url": {"url": f"data:image/png;base64,{b64}"}
         })
 
-    payload = json.dumps({
+    payload = {
         "model": GROQ_VISION_MODEL,
         "messages": [{"role": "user", "content": content}],
         "temperature": 0.1,
         "max_tokens": 600,
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        GROQ_API_URL,
-        data=payload,
-        headers={
-            "Content-Type": "application/json",
-            "Authorization": f"Bearer {api_key}",
-        },
-    )
+    }
 
     try:
-        with urllib.request.urlopen(req, timeout=45) as resp:
-            resp_json = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError as e:
-        body = e.read().decode("utf-8", errors="ignore")
-        raise RuntimeError(f"Groq API xatosi {e.code}: {body[:300]}")
+        import requests as _requests
+        resp = _requests.post(
+            GROQ_API_URL,
+            json=payload,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+                "User-Agent": "Mozilla/5.0 (compatible; BrainWebAI/1.0)",
+            },
+            timeout=60,
+        )
+        if not resp.ok:
+            raise RuntimeError(f"Groq API xatosi {resp.status_code}: {resp.text[:400]}")
+        resp_json = resp.json()
+    except RuntimeError:
+        raise
     except Exception as e:
         raise RuntimeError(f"Groq API bilan aloqa xatosi: {e}")
 
